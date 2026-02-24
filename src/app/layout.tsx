@@ -1,0 +1,29 @@
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+export const metadata: Metadata = {
+  title: "ISpot — Tecnología importada al mejor precio",
+  description:
+    "Catálogo actualizado diariamente con los mejores precios en smartphones, audio y accesorios. Stock garantizado, comprá por WhatsApp.",
+  keywords: ["ispot", "tecnología", "smartphones", "importados", "precios"],
+  openGraph: {
+    title: "ISpot — Tecnología importada al mejor precio",
+    description: "Catálogo actualizado diariamente con stock real.",
+    type: "website",
+  },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="es" className={inter.variable}>
+      <body className="font-sans antialiased bg-zinc-950">{children}</body>
+    </html>
+  );
+}
