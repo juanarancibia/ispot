@@ -1,6 +1,8 @@
 import type { ConfigNegocio, Producto, ProveedorId } from "@/types";
 import { kv } from "@vercel/kv";
 
+const TAG = "[KV Store]";
+
 // =============================================
 // Constantes de claves de Redis / Vercel KV
 // =============================================
@@ -28,7 +30,13 @@ const DEFAULT_CONFIG: ConfigNegocio = {
  * Lee la configuración del negocio desde KV. Si no existe, devuelve los valores por defecto.
  */
 export async function getConfig(): Promise<ConfigNegocio> {
+    console.log(`${TAG} Leyendo config desde KV (key: ${KV_KEYS.CONFIG})...`);
     const config = await kv.get<ConfigNegocio>(KV_KEYS.CONFIG);
+    if (config) {
+        console.log(`${TAG} ✅ Config encontrada:`, JSON.stringify(config));
+    } else {
+        console.log(`${TAG} ⚠️ Config no encontrada, usando defaults`);
+    }
     return config ?? DEFAULT_CONFIG;
 }
 
@@ -36,7 +44,9 @@ export async function getConfig(): Promise<ConfigNegocio> {
  * Guarda la configuración del negocio en KV.
  */
 export async function saveConfig(config: ConfigNegocio): Promise<void> {
+    console.log(`${TAG} Guardando config en KV...`, JSON.stringify(config));
     await kv.set(KV_KEYS.CONFIG, config);
+    console.log(`${TAG} ✅ Config guardada`);
 }
 
 // =============================================
@@ -48,7 +58,9 @@ export async function saveConfig(config: ConfigNegocio): Promise<void> {
  */
 export async function getStock(proveedor: ProveedorId): Promise<Producto[]> {
     const key = proveedor === "prov_1" ? KV_KEYS.STOCK_PROV_1 : KV_KEYS.STOCK_PROV_2;
+    console.log(`${TAG} Leyendo stock de ${proveedor} (key: ${key})...`);
     const stock = await kv.get<Producto[]>(key);
+    console.log(`${TAG} Stock de ${proveedor}: ${stock ? `${stock.length} productos` : "null (vacío)"}`);
     return stock ?? [];
 }
 
@@ -57,7 +69,9 @@ export async function getStock(proveedor: ProveedorId): Promise<Producto[]> {
  */
 export async function saveStock(proveedor: ProveedorId, productos: Producto[]): Promise<void> {
     const key = proveedor === "prov_1" ? KV_KEYS.STOCK_PROV_1 : KV_KEYS.STOCK_PROV_2;
+    console.log(`${TAG} Guardando ${productos.length} productos para ${proveedor} (key: ${key})...`);
     await kv.set(key, productos);
+    console.log(`${TAG} ✅ Stock guardado para ${proveedor}`);
 }
 
 export { kv };
