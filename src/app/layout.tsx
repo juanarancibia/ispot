@@ -9,12 +9,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ISpot — Tecnología importada al mejor precio",
+  title: "ISpot — Córdoba",
   description:
     "Catálogo actualizado diariamente con los mejores precios en smartphones, audio y accesorios. Stock garantizado, comprá por WhatsApp.",
   keywords: ["ispot", "tecnología", "smartphones", "importados", "precios"],
   openGraph: {
-    title: "ISpot — Tecnología importada al mejor precio",
+    title: "ISpot — Córdoba",
     description: "Catálogo actualizado diariamente con stock real.",
     type: "website",
   },
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={inter.variable}>
-      <body className="font-sans antialiased bg-zinc-950">{children}</body>
+      <body className="font-sans antialiased bg-neutral-50">{children}</body>
     </html>
   );
 }

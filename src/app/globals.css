@@ -2,45 +2,64 @@
 
 @theme inline {
   --font-sans: var(--font-inter), system-ui, sans-serif;
-  --color-background: #09090b;
-  --color-foreground: #fafafa;
+  --color-background: #fafafa;
+  --color-foreground: #171717;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: #09090b;
-  color: #fafafa;
+  background: #fafafa;
+  color: #171717;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
 }
 
 /* Scrollbar personalizado */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #18181b;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: #d4d4d4;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #a3a3a3;
+}
+
+/* Ocultar scrollbar horizontal (filtros mobile) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Selección de texto */
 ::selection {
-  background: rgba(16, 185, 129, 0.3);
-  color: #d1fae5;
+  background: rgba(37, 99, 235, 0.15);
+  color: #1e3a8a;
+}
+
+/* Focus visible para accesibilidad */
+:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.5);
+  outline-offset: 2px;
+}
+
+/* Safe area para dispositivos con notch */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
