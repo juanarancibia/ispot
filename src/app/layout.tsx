@@ -9,14 +9,17 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ISpot — Córdoba",
+  title: "iSpot",
   description:
     "Catálogo actualizado diariamente con los mejores precios en smartphones, audio y accesorios. Stock garantizado, comprá por WhatsApp.",
   keywords: ["ispot", "tecnología", "smartphones", "importados", "precios"],
   openGraph: {
-    title: "ISpot — Córdoba",
+    title: "iSpot",
     description: "Catálogo actualizado diariamente con stock real.",
     type: "website",
+  },
+  icons: {
+    icon: "/assets/favicon.ico",
   },
 };
 
