@@ -16,10 +16,10 @@ export const KV_KEYS = {
  * Valores por defecto para la configuración del negocio.
  */
 const DEFAULT_CONFIG: ConfigNegocio = {
-    cotizacion_usd: 1450,
     margen_prov_1: 1.15,
     margen_prov_2: 1.2,
     whatsapp_vendedor: "",
+    mostrar_ars: true,
 };
 
 // =============================================

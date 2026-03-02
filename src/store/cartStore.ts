@@ -11,7 +11,7 @@ interface CartState {
     updateCantidad: (productoId: string, variante: string | null, cantidad: number) => void;
     clearCart: () => void;
     totalItems: () => number;
-    totalARS: () => number;
+    getTotalTexts: () => string[];
 }
 
 /** Genera una clave única por producto + variante para el carrito. */
@@ -70,8 +70,33 @@ export const useCartStore = create<CartState>()(
 
             totalItems: () => get().items.reduce((acc, i) => acc + i.cantidad, 0),
 
-            totalARS: () =>
-                get().items.reduce((acc, i) => acc + i.producto.precio_final_ars * i.cantidad, 0),
+            getTotalTexts: () => {
+                const items = get().items;
+                let totalUsd = 0;
+                let totalArs = 0;
+                items.forEach((i) => {
+                    if (i.producto.precio_final_ars) {
+                        totalArs += i.producto.precio_final_ars * i.cantidad;
+                    } else {
+                        totalUsd += i.producto.precio_final_usd * i.cantidad;
+                    }
+                });
+
+                const texts: string[] = [];
+                if (totalUsd > 0) {
+                    texts.push(`USD ${totalUsd.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`);
+                }
+                if (totalArs > 0) {
+                    texts.push(new Intl.NumberFormat("es-AR", {
+                        style: "currency",
+                        currency: "ARS",
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                    }).format(totalArs));
+                }
+                if (texts.length === 0) return ["$ 0"];
+                return texts;
+            },
         }),
         {
             name: "ispot-cart",

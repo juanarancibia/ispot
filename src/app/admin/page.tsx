@@ -1,8 +1,8 @@
 "use client";
 
 import { formatARS } from "@/lib/utils";
-import type { ConfigNegocio, Producto } from "@/types";
-import { AlertCircle, CheckCircle, Loader2, RefreshCw, Save } from "lucide-react";
+import type { ConfigNegocio, Producto, ProveedorId } from "@/types";
+import { AlertCircle, AlertTriangle, CheckCircle, Edit2, Loader2, RefreshCw, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type StockData = { prov_1: Producto[]; prov_2: Producto[] };
@@ -16,15 +16,23 @@ const CONDICION_BADGE: Record<string, string> = {
 
 export default function AdminPage() {
     const [config, setConfig] = useState<ConfigNegocio>({
-        cotizacion_usd: 1450,
         margen_prov_1: 1.15,
         margen_prov_2: 1.2,
         whatsapp_vendedor: "",
+        mostrar_ars: true,
     });
     const [stock, setStock] = useState<StockData>({ prov_1: [], prov_2: [] });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+
+    // Edit Product State
+    const [editingProduct, setEditingProduct] = useState<(Producto & { proveedor: ProveedorId }) | null>(null);
+    const [savingProduct, setSavingProduct] = useState(false);
+
+    // Reset DB State
+    const [resetting, setResetting] = useState(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
 
     // Cargar config y stock al montar
     useEffect(() => {
@@ -82,30 +90,75 @@ export default function AdminPage() {
         }
     };
 
+    const handleSaveProduct = async () => {
+        if (!editingProduct) return;
+        setSavingProduct(true);
+        try {
+            const res = await fetch("/api/stock", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(editingProduct),
+            });
+            if (res.ok) {
+                await handleRefreshStock();
+                setEditingProduct(null);
+            } else {
+                alert("Error al guardar el producto");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Excepción al guardar producto");
+        } finally {
+            setSavingProduct(false);
+        }
+    };
+
+    const handleDeleteProduct = async (id: string, proveedor: ProveedorId) => {
+        if (!confirm("¿Estás seguro de eliminar este producto?")) return;
+        try {
+            const res = await fetch(`/api/stock?proveedor=${proveedor}&id=${id}`, {
+                method: "DELETE",
+            });
+            if (res.ok) {
+                await handleRefreshStock();
+            } else {
+                alert("Error al eliminar el producto");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Excepción al eliminar producto");
+        }
+    };
+
+    const handleResetDB = async () => {
+        setResetting(true);
+        try {
+            const res = await fetch("/api/reset-db", { method: "POST" });
+            if (res.ok) {
+                await handleRefreshStock();
+                setShowResetConfirm(false);
+            } else {
+                alert("Error al resetear la base de datos");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Excepción al resetear db");
+        } finally {
+            setResetting(false);
+        }
+    };
+
     const inputClass =
         "w-full bg-neutral-50 border border-neutral-200 focus:border-blue-500 rounded-xl px-4 py-2.5 text-neutral-900 text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500/20";
 
     return (
-        <div className="space-y-10">
-            <h1 className="text-2xl font-bold tracking-tight">Configuración del Negocio</h1>
+        <div className="space-y-10 relative">
+            <h1 className="text-2xl font-bold tracking-tight">Panel de Administración</h1>
 
             {/* Formulario de configuración */}
             <section className="bg-white border border-neutral-100 rounded-2xl p-6 space-y-5 shadow-sm">
                 <h2 className="text-lg font-semibold text-neutral-800">Parámetros Generales</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div className="space-y-1.5">
-                        <label htmlFor="cotizacion_usd" className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">
-                            Cotización USD (ARS)
-                        </label>
-                        <input
-                            id="cotizacion_usd"
-                            type="number"
-                            value={config.cotizacion_usd}
-                            onChange={(e) => setConfig((c) => ({ ...c, cotizacion_usd: Number(e.target.value) }))}
-                            className={inputClass}
-                            min={0}
-                        />
-                    </div>
                     <div className="space-y-1.5">
                         <label htmlFor="whatsapp_vendedor" className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">
                             WhatsApp Vendedor (con código de país)
@@ -149,9 +202,24 @@ export default function AdminPage() {
                     </div>
                 </div>
 
+                <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-sm font-semibold text-neutral-800">Mostrar Precios en ARS</h3>
+                        <p className="text-xs text-neutral-500 mt-0.5 max-w-sm">Si se desactiva, de forzará la vista en USD ignorando los valores cargados en ARS.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={config.mostrar_ars}
+                            onChange={(e) => setConfig((c) => ({ ...c, mostrar_ars: e.target.checked }))}
+                        />
+                        <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
                 <div className="flex items-center gap-3 pt-2">
                     <button
-                        id="save-config-button"
                         onClick={handleSave}
                         disabled={saving}
                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium px-6 py-2.5 rounded-full transition-all duration-200 shadow-sm"
@@ -179,7 +247,6 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-neutral-800">Stock Actual</h2>
                     <button
-                        id="refresh-stock-button"
                         onClick={handleRefreshStock}
                         disabled={loading}
                         className="flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 border border-neutral-200 hover:border-neutral-300 px-3.5 py-2 rounded-full transition-all"
@@ -204,7 +271,7 @@ export default function AdminPage() {
                                 <table className="w-full text-sm">
                                     <thead className="bg-neutral-50/80">
                                         <tr>
-                                            {["Marca", "Modelo", "Variantes", "USD", "ARS", "Condición"].map((h) => (
+                                            {["Marca", "Modelo", "Variantes", "USD", "ARS", "Condición", "Acciones"].map((h) => (
                                                 <th
                                                     key={h}
                                                     className="text-left px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-widest"
@@ -230,12 +297,30 @@ export default function AdminPage() {
                                                     ${p.precio_usd.toLocaleString("es-AR")}
                                                 </td>
                                                 <td className="px-4 py-3 text-neutral-700">
-                                                    {p.precio_ars !== null ? formatARS(p.precio_ars) : "—"}
+                                                    {p.precio_ars && p.precio_ars > 0 ? formatARS(p.precio_ars) : "—"}
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${CONDICION_BADGE[p.condicion] ?? "bg-neutral-100 text-neutral-600"}`}>
                                                         {p.condicion}
                                                     </span>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => setEditingProduct({ ...p, proveedor: prov })}
+                                                            className="text-blue-600 hover:text-blue-800 p-1.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
+                                                            title="Editar producto"
+                                                        >
+                                                            <Edit2 size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteProduct(p.id, prov)}
+                                                            className="text-red-600 hover:text-red-800 p-1.5 rounded bg-red-50 hover:bg-red-100 transition-colors"
+                                                            title="Eliminar producto"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -246,6 +331,171 @@ export default function AdminPage() {
                     </div>
                 ))}
             </section>
+
+            {/* Reset Database Section */}
+            <section className="bg-red-50 border border-red-100 rounded-2xl p-6 space-y-4 shadow-sm mt-12 mb-10">
+                <div className="flex items-start gap-4">
+                    <div className="bg-red-100 p-2.5 rounded-full text-red-600">
+                        <AlertTriangle size={24} />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-semibold text-red-800">Zona de Peligro: Limpiar Base de Datos</h2>
+                        <p className="text-sm text-red-600/80 mt-1 max-w-xl">
+                            Esta acción eliminará centralmente todo el stock cargado en los proveedores.
+                            Útil si necesitas comenzar desde cero y volver a parsear mensajes.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="pt-2">
+                    {!showResetConfirm ? (
+                        <button
+                            onClick={() => setShowResetConfirm(true)}
+                            className="bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2.5 rounded-xl transition-colors shadow-sm text-sm"
+                        >
+                            Resetear Base de Datos
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-3 transition-opacity">
+                            <button
+                                onClick={handleResetDB}
+                                disabled={resetting}
+                                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium px-5 py-2.5 rounded-xl transition-colors shadow-sm text-sm"
+                            >
+                                {resetting ? <Loader2 size={16} className="animate-spin" /> : null}
+                                Sí, eliminar todo definitivamente
+                            </button>
+                            <button
+                                onClick={() => setShowResetConfirm(false)}
+                                disabled={resetting}
+                                className="bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-medium px-5 py-2.5 rounded-xl transition-colors text-sm"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* Modal de Edición de Producto */}
+            {editingProduct && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+                        <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
+                            <h3 className="font-bold text-lg text-neutral-900">Editar Producto</h3>
+                            <button
+                                onClick={() => setEditingProduct(null)}
+                                className="text-neutral-400 hover:text-neutral-700 p-1.5 hover:bg-neutral-100 rounded-lg transition-colors"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto space-y-4 flex-1">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Marca</label>
+                                    <input
+                                        type="text"
+                                        value={editingProduct.marca}
+                                        onChange={(e) => setEditingProduct({ ...editingProduct, marca: e.target.value })}
+                                        className={inputClass}
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Modelo</label>
+                                    <input
+                                        type="text"
+                                        value={editingProduct.modelo}
+                                        onChange={(e) => setEditingProduct({ ...editingProduct, modelo: e.target.value })}
+                                        className={inputClass}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">
+                                    Variantes (separadas por coma)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editingProduct.variantes.join(", ")}
+                                    onChange={(e) => {
+                                        const parts = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
+                                        setEditingProduct({ ...editingProduct, variantes: parts });
+                                    }}
+                                    className={inputClass}
+                                    placeholder="Ej: 128GB, 256GB"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Precio USD</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span className="text-neutral-500 sm:text-sm">$</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={editingProduct.precio_usd}
+                                            onChange={(e) => setEditingProduct({ ...editingProduct, precio_usd: Number(e.target.value) })}
+                                            className={`${inputClass} pl-7`}
+                                            min={0}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Precio ARS (0 = N/A)</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span className="text-neutral-500 sm:text-sm">$</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={editingProduct.precio_ars || 0}
+                                            onChange={(e) => setEditingProduct({ ...editingProduct, precio_ars: Number(e.target.value) === 0 ? null : Number(e.target.value) })}
+                                            className={`${inputClass} pl-7`}
+                                            min={0}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Condición</label>
+                                <select
+                                    value={editingProduct.condicion}
+                                    onChange={(e) => setEditingProduct({ ...editingProduct, condicion: e.target.value as any })}
+                                    className={`${inputClass} appearance-none bg-white cursor-pointer`}
+                                >
+                                    <option value="Nuevo">Nuevo</option>
+                                    <option value="Usado">Usado</option>
+                                    <option value="CPO">CPO</option>
+                                    <option value="AS IS">AS IS</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="p-5 border-t border-neutral-100 flex items-center justify-end gap-3 bg-neutral-50/50">
+                            <button
+                                onClick={() => setEditingProduct(null)}
+                                className="px-5 py-2.5 text-sm font-medium text-neutral-700 bg-white border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSaveProduct}
+                                disabled={savingProduct}
+                                className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:bg-blue-400 transition-colors shadow-sm"
+                            >
+                                {savingProduct ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

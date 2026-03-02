@@ -6,10 +6,10 @@
  * Configuración global del negocio, almacenada en KV como `config_negocio`.
  */
 export interface ConfigNegocio {
-  cotizacion_usd: number;
   margen_prov_1: number;
   margen_prov_2: number;
   whatsapp_vendedor: string;
+  mostrar_ars: boolean;
 }
 
 /**
@@ -40,7 +40,8 @@ export interface Producto {
  * Producto enriquecido con el precio final calculado para mostrar en el frontend.
  */
 export interface ProductoConPrecio extends Producto {
-  precio_final_ars: number;
+  precio_final_usd: number;
+  precio_final_ars: number | null;
 }
 
 /**

@@ -24,19 +24,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         // Validaciones básicas
         if (
-            body.cotizacion_usd === undefined ||
             body.margen_prov_1 === undefined ||
             body.margen_prov_2 === undefined ||
-            body.whatsapp_vendedor === undefined
+            body.whatsapp_vendedor === undefined ||
+            body.mostrar_ars === undefined
         ) {
             return NextResponse.json({ error: "Faltan campos requeridos." }, { status: 400 });
         }
 
         const config: ConfigNegocio = {
-            cotizacion_usd: Number(body.cotizacion_usd),
             margen_prov_1: Number(body.margen_prov_1),
             margen_prov_2: Number(body.margen_prov_2),
             whatsapp_vendedor: String(body.whatsapp_vendedor),
+            mostrar_ars: Boolean(body.mostrar_ars),
         };
 
         await saveConfig(config);

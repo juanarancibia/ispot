@@ -1,9 +1,9 @@
 "use client";
 
-import { formatARS } from "@/lib/utils";
+import { formatMoney } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import type { ProductoConPrecio } from "@/types";
-import { CheckCircle2, Plus, Tag } from "lucide-react";
+import { CheckCircle2, Plus } from "lucide-react";
 import { useState } from "react";
 
 interface ProductCardProps {
@@ -74,26 +74,42 @@ export default function ProductCard({ producto }: ProductCardProps) {
                         </div>
                     )}
 
-                    {/* Precio — solo visible en desktop dentro de este bloque */}
-                    <div className="hidden sm:flex items-center gap-1.5 text-neutral-400 text-xs mt-3 pt-3 border-t border-neutral-100">
-                        <Tag size={11} />
-                        <span>USD {producto.precio_usd.toLocaleString("es-AR")}</span>
+                    {/* Precios — solo visible en desktop dentro de este bloque */}
+                    <div className="hidden sm:block mt-3 pt-3 border-t border-neutral-100">
+                        {producto.precio_final_ars ? (
+                            <>
+                                <p className="text-blue-600 font-bold text-lg leading-tight">
+                                    {formatMoney(producto.precio_final_ars, "ARS")}
+                                </p>
+                                <p className="text-neutral-400 text-xs mt-0.5">
+                                    {formatMoney(producto.precio_final_usd, "USD")}
+                                </p>
+                            </>
+                        ) : (
+                            <p className="text-blue-600 font-bold text-lg mt-0.5">
+                                {formatMoney(producto.precio_final_usd, "USD")}
+                            </p>
+                        )}
                     </div>
-                    <p className="hidden sm:block text-blue-600 font-bold text-lg mt-0.5">
-                        {formatARS(producto.precio_final_ars)}
-                    </p>
                 </div>
 
                 {/* Columna derecha en mobile: precio + botón */}
-                <div className="flex flex-col items-end justify-between sm:hidden gap-2">
+                <div className="flex flex-col items-end justify-between sm:hidden gap-2 mt-1 -mr-1">
                     <div className="text-right">
-                        <div className="flex items-center gap-1 text-neutral-400 text-[10px]">
-                            <Tag size={9} />
-                            <span>USD {producto.precio_usd.toLocaleString("es-AR")}</span>
-                        </div>
-                        <p className="text-blue-600 font-bold text-base">
-                            {formatARS(producto.precio_final_ars)}
-                        </p>
+                        {producto.precio_final_ars ? (
+                            <>
+                                <p className="text-blue-600 font-bold text-base leading-tight">
+                                    {formatMoney(producto.precio_final_ars, "ARS")}
+                                </p>
+                                <p className="text-neutral-400 text-[10px] mt-0.5">
+                                    {formatMoney(producto.precio_final_usd, "USD")}
+                                </p>
+                            </>
+                        ) : (
+                            <p className="text-blue-600 font-bold text-base mt-1">
+                                {formatMoney(producto.precio_final_usd, "USD")}
+                            </p>
+                        )}
                     </div>
                     <button
                         onClick={handleAdd}

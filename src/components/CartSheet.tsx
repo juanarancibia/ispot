@@ -1,6 +1,5 @@
 "use client";
-
-import { formatARS } from "@/lib/utils";
+import { formatMoney } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import { ChevronRight, MessageCircle, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { useState } from "react";
@@ -11,18 +10,22 @@ interface CartSheetProps {
 
 export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
     const [open, setOpen] = useState(false);
-    const { items, removeItem, updateCantidad, clearCart, totalItems, totalARS } = useCartStore();
+    const { items, removeItem, updateCantidad, clearCart, totalItems, getTotalTexts } = useCartStore();
 
     const handlePedido = () => {
         if (items.length === 0) return;
 
         const lineas = items.map(
-            (item) =>
-                `- ${item.cantidad}x ${item.producto.marca} ${item.producto.modelo}${item.varianteSeleccionada ? ` (${item.varianteSeleccionada})` : ""
-                } - ${formatARS(item.producto.precio_final_ars * item.cantidad)}`
+            (item) => {
+                const priceStr = item.producto.precio_final_ars
+                    ? formatMoney(item.producto.precio_final_ars * item.cantidad, "ARS")
+                    : formatMoney(item.producto.precio_final_usd * item.cantidad, "USD");
+                return `- ${item.cantidad}x ${item.producto.marca} ${item.producto.modelo}${item.varianteSeleccionada ? ` (${item.varianteSeleccionada})` : ""} - ${priceStr}`;
+            }
         );
 
-        const textoResumen = `Hola, quiero realizar el siguiente pedido:\n${lineas.join("\n")}\n\nTotal: ${formatARS(totalARS())}`;
+        const totalTextsStr = getTotalTexts().join(" + ");
+        const textoResumen = `Hola, quiero realizar el siguiente pedido:\n${lineas.join("\n")}\n\nTotal: ${totalTextsStr}`;
         window.open(
             `https://wa.me/${whatsappVendedor}?text=${encodeURIComponent(textoResumen)}`,
             "_blank"
@@ -105,9 +108,17 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
                                         {item.varianteSeleccionada && (
                                             <p className="text-[11px] text-neutral-500 mt-0.5">{item.varianteSeleccionada}</p>
                                         )}
-                                        <p className="text-blue-600 font-bold mt-1 text-sm">
-                                            {formatARS(item.producto.precio_final_ars * item.cantidad)}
-                                        </p>
+                                        <div className="mt-1">
+                                            {item.producto.precio_final_ars ? (
+                                                <p className="text-blue-600 font-bold text-sm">
+                                                    {formatMoney(item.producto.precio_final_ars * item.cantidad, "ARS")}
+                                                </p>
+                                            ) : (
+                                                <p className="text-blue-600 font-bold text-sm">
+                                                    {formatMoney(item.producto.precio_final_usd * item.cantidad, "USD")}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                     {/* Controles cantidad */}
                                     <div className="flex flex-col items-center justify-between gap-1">
@@ -153,7 +164,7 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
                     <div className="border-t border-neutral-200 px-4 sm:px-5 py-4 space-y-3 bg-white">
                         <div className="flex justify-between items-center">
                             <span className="text-neutral-500 text-sm">Total</span>
-                            <span className="text-neutral-900 text-xl font-bold">{formatARS(totalARS())}</span>
+                            <span className="text-neutral-900 text-xl font-bold">{getTotalTexts().join(" + ")}</span>
                         </div>
                         <button
                             id="hacer-pedido-button"

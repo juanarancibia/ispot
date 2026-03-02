@@ -9,10 +9,10 @@ import { Shield, Smartphone, Zap } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 const DEFAULT_CONFIG: ConfigNegocio = {
-  cotizacion_usd: 1450,
   margen_prov_1: 1.15,
   margen_prov_2: 1.2,
   whatsapp_vendedor: "",
+  mostrar_ars: true,
 };
 
 async function cargarDatos(): Promise<{
@@ -38,9 +38,11 @@ export default async function HomePage() {
 
   const productos: ProductoConPrecio[] = [...stockProv1, ...stockProv2].map((p) => {
     const margen = p.proveedor === "prov_1" ? config.margen_prov_1 : config.margen_prov_2;
+    const { precio_final_usd, precio_final_ars } = calcularPrecioFinal(p.precio_usd, p.precio_ars, margen, config.mostrar_ars);
     return {
       ...p,
-      precio_final_ars: calcularPrecioFinal(p.precio_usd, p.precio_ars, config.cotizacion_usd, margen),
+      precio_final_usd,
+      precio_final_ars,
     };
   });
 

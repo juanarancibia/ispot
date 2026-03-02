@@ -12,6 +12,16 @@ export function formatARS(amount: number): string {
 }
 
 /**
+ * Formatea un número como moneda dependiendo del tipo.
+ */
+export function formatMoney(amount: number, currency: "USD" | "ARS"): string {
+    if (currency === "USD") {
+        return `USD ${amount.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    }
+    return formatARS(amount);
+}
+
+/**
  * Genera un ID único usando timestamp y parte aleatoria.
  */
 export function generateId(): string {
@@ -25,9 +35,18 @@ export function generateId(): string {
 export function calcularPrecioFinal(
     precioUsd: number,
     precioArs: number | null,
-    cotizacionUsd: number,
-    margen: number
-): number {
-    const precioBase = precioArs !== null ? precioArs : precioUsd * cotizacionUsd;
-    return Math.round(precioBase * margen);
+    margen: number,
+    mostrarArs: boolean
+): { precio_final_usd: number; precio_final_ars: number | null } {
+    const precio_final_usd = Math.round(precioUsd * margen);
+    let precio_final_ars: number | null = null;
+
+    if (mostrarArs && precioArs !== null && precioArs > 0) {
+        precio_final_ars = Math.round(precioArs * margen);
+    }
+
+    return {
+        precio_final_usd,
+        precio_final_ars,
+    };
 }
