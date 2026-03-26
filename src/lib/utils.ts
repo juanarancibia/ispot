@@ -50,3 +50,22 @@ export function calcularPrecioFinal(
         precio_final_ars,
     };
 }
+
+/**
+ * Normaliza el nombre del producto para generar el nombre del archivo de la imagen.
+ * Ej: "Apple", "iPhone 17 Pro Max 512GB" -> "apple-iphone-17-pro-max"
+ */
+export function getNormalizedProductName(marca: string, modelo: string): string {
+    const raw = `${modelo}`;
+    const normalizedName = raw
+        .toLowerCase()
+        .normalize("NFD") // Descompone caracteres con acentos
+        .replace(/[\u0300-\u036f]/g, "") // Elimina acentos
+        .replace(/\b\d+\s*(gb|tb)\b/gi, "") // Elimina capacidades como 256gb, 512 gb, 1 tb
+        .replace(/[^a-z0-9]+/g, "-") // Reemplaza no-alfanuméricos con guiones (-).
+        .replace(/^-+|-+$/g, ""); // Elimina guiones al principio y final
+
+    console.log("normalizedName", normalizedName);
+    
+    return normalizedName;
+}

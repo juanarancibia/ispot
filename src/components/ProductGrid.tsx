@@ -29,7 +29,7 @@ export default function ProductGrid({ productos }: ProductGridProps) {
         <div>
             {/* Barra de búsqueda + filtros — sticky */}
             <div className="sticky top-[49px] sm:top-[57px] z-20 bg-neutral-50/90 backdrop-blur-md -mx-5 px-5 sm:-mx-8 sm:px-8 py-3 border-b border-neutral-200/50 mb-5">
-                <div className="flex gap-2 items-center">
+                <div className="flex flex-col gap-2 items-left">
                     <div className="relative flex-1">
                         <Search
                             size={15}
@@ -78,7 +78,7 @@ export default function ProductGrid({ productos }: ProductGridProps) {
                     <p className="text-sm">No se encontraron productos</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                     {productosFiltrados.map((p) => (
                         <ProductCard key={p.id} producto={p} />
                     ))}

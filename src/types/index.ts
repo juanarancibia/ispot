@@ -42,6 +42,7 @@ export interface Producto {
 export interface ProductoConPrecio extends Producto {
   precio_final_usd: number;
   precio_final_ars: number | null;
+  imagen?: string;
 }
 
 /**

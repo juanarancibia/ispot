@@ -3,6 +3,7 @@ import ProductGrid from "@/components/ProductGrid";
 import { getConfig, getStock } from "@/lib/kv";
 import { MOCK_STOCK_PROV_1, MOCK_STOCK_PROV_2 } from "@/lib/mockData";
 import { calcularPrecioFinal } from "@/lib/utils";
+import { getProductImageServerFallback } from "@/lib/serverUtils";
 import type { ConfigNegocio, Producto, ProductoConPrecio } from "@/types";
 import { Shield, Smartphone, Zap } from "lucide-react";
 
@@ -43,6 +44,7 @@ export default async function HomePage() {
       ...p,
       precio_final_usd,
       precio_final_ars,
+      imagen: getProductImageServerFallback(p.marca, p.modelo),
     };
   });
 
