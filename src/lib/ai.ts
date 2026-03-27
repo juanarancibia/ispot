@@ -13,6 +13,9 @@ interface ProductoRaw {
     variantes: string[];
     precio_usd: number;
     precio_ars: number | null;
+    precio_manual_usd?: number | null;
+    precio_manual_ars?: number | null;
+    almacenamiento?: string;
     condicion: "Nuevo" | "Usado" | "CPO" | "AS IS";
 }
 
@@ -29,13 +32,14 @@ REGLAS ESTRICTAS:
 
 ESQUEMA POR PRODUCTO:
 {
-  "marca": "String — Apple, Samsung, Xiaomi, Motorola, Infinix, OPPO, JBL, PlayStation, Nintendo, etc. Inferila si no está explícita.",
-  "modelo": "String — nombre COMPLETO. Ejemplos: 'iPhone 15 Pro 128GB', 'Samsung Galaxy S25 Ultra 512GB', 'MacBook Air M4 13\" 256GB'. Si el texto dice solo '14 128gb', completalo a 'iPhone 14 128GB' según el contexto de la sección.",
-  "categoria": "String — 'Smartphones', 'Tablets', 'Audio', 'Cámaras Fotográficas', 'Computadoras MacBook Air y Pro', 'Consolas', 'Accesorios', etc. Inferila según el tipo de producto. Por defecto 'Smartphones'.",
-  "variantes": ["String"] — Array de colores disponibles. Ej: ["Black", "Silver"]. Si no hay colores, devolvé un array vacío []. Ignorá porcentajes de batería (ej: 89%) y emojis de colores.",
-  "precio_usd": Number — Precio en dólares como entero (sin decimales ni separadores de miles),
-  "precio_ars": Number | null — Precio en pesos argentinos si existe, como entero SIN separadores (ej: el texto "$1,450,000" → 1450000). null si no hay precio en pesos,
-  "condicion": "String — Uno de: 'Nuevo', 'Usado', 'CPO', 'AS IS'. Por defecto 'Nuevo'. Usá 'CPO' si el texto dice 'CPO'. Usá 'AS IS' si dice 'AS IS' o 'AS IS+'. Usá 'Usado' si dice 'Usado' o 'Usados' o la sección es de usados."
+  "marca": "String — Apple, Samsung, DJI, Nikon, Canon, Sigma, Xiaomi, etc. Inferila si no está explícita.",
+  "modelo": "String — nombre COMPLETO. Ejemplos: 'iPhone 15 Pro 128GB', 'DJI Mini 4 Pro', 'Lente Sigma 35mm para Nikon'. Si el texto dice solo '14 128gb', completalo a 'iPhone 14 128GB' según la sección.",
+  "categoria": "String — 'Smartphones', 'Tablets', 'Audio', 'Cámaras Fotográficas', 'Lentes de cámara', 'Drones', 'iPads', 'Computadoras MacBook Air y Pro', 'Consolas', 'Accesorios', etc. Inferila según el tipo. OJO: Para lentes separá la categoría o marca si podés (ej: si es Nikon, poné marca Nikon y categoria 'Lentes de cámara').",
+  "variantes": ["String"] — Array de colores o características extra disponibles. Ejec: ["Black", "Silver"]. Vacío [] si no hay.",
+  "precio_usd": Number — Precio en dólares como entero,
+  "precio_ars": Number | null — Precio en pesos argentinos o null,
+  "almacenamiento": "String | null — SÓLO si es MacBook, iPad, o Smartphone (ej: '256GB', '512GB', '1TB', '2TB'). null si no aplica.",
+  "condicion": "String — Uno de: 'Nuevo', 'Usado', 'CPO', 'AS IS'."
 }
 
 CASOS ESPECIALES:
@@ -53,117 +57,43 @@ Si el fragmento no contiene productos (solo texto informativo), devolvé: {"prod
 // =============================================
 
 /**
- * Patrones que indican el inicio de una nueva sección en el mensaje.
- * Cada uno es una línea-header que agrupa productos de una categoría.
- */
-const SECTION_HEADER_PATTERNS = [
-    /^🟥/,           // "🟥 VARIOS"
-    /^🍎/,           // "🍎 Apple"
-    /^📱\s*(samsung|motorola|xiaomi|oppo)/i,
-    /^📱\s*\*?REDMI/i,
-    /^📱\s*\*?GAMA/i,
-    /^📞/,           // "📞 OPPO"
-    /^INFINIX/i,
-    /^🔝/,           // "🔝 GAMA ALTA"
-    /^🔥\s*\*?POCO/i,
-    /^💥/,           // "💥 POCO M / C"
-    /^📱\s*\*?POCO/i,
-    /^🔌/,           // "🔌 Cables"
-    /^⚡\s*\*?Cargadores/i,
-    /^👉🏻📱/,       // Provider 2 sections
-    /^🔥LINEA/i,     // "🔥LINEA IPHONE 17🔥"
-    /^🎁OTROS/i,     // "🎁OTROS PRODUCTOS🎁"
-    /^🍎\s*Apple\s*Usados/i,
-    /^📱\s*CONDICIONES/i,
-    /^⚠️\s*IMPORTANTE/i,
-];
-
-/**
- * Verifica si una línea es un header de sección.
- */
-function esSectionHeader(linea: string): boolean {
-    const trimmed = linea.trim();
-    return SECTION_HEADER_PATTERNS.some((pat) => pat.test(trimmed));
-}
-
-/**
- * Verifica si una línea contiene un producto (tiene un precio en USD).
- * Busca patrones como: tab + número, $número, USD número.
- */
-function tieneProducto(linea: string): boolean {
-    // Tab-separated price (Provider 1 format)
-    if (/\t\t\d{2,}[\t-]/.test(linea)) return true;
-    // Inline $price (Provider 2 format)
-    if (/\$\$?\d{2,}/.test(linea)) return true;
-    // Dollar amount like "USD 20"
-    if (/USD\s*\d+/i.test(linea)) return true;
-    return false;
-}
-
-/**
- * Divide el texto crudo del proveedor en secciones lógicas para procesamiento independiente.
- * Cada sección es un fragmento coherente que el LLM puede parsear de forma aislada.
+ * Divide el texto crudo del proveedor en fragmentos lógicos para procesamiento.
  *
- * Estrategia:
- * - Detecta headers de sección por patrones de emojis/marcas.
- * - Agrupa líneas entre headers.
- * - Filtra secciones que no contienen ningún producto.
- * - Si el mensaje es corto (< 50 líneas), lo devuelve como una sola sección.
+ * Estrategia (Maximizando Paralelismo y Velocidad):
+ * - Cortamos en pedazos pequeños (ej: ~50 líneas maximo) para que OpenAI tarde mucho menos por cada chunk
+ *   (batching en paralelo). Al hacer chunks pequeños el LLM lo procesa a gran velocidad.
+ * - Intentamos cortar en líneas vacías para no partir productos.
  */
 export function splitEnSecciones(textoRaw: string): string[] {
     const lineas = textoRaw.split("\n");
 
-    // Mensajes cortos: procesar como un solo bloque
-    if (lineas.length < 50) {
-        console.log(`${TAG} Mensaje corto (${lineas.length} líneas) — procesando como bloque único`);
-        return [textoRaw];
-    }
+    const chunks: string[] = [];
+    let currentChunk: string[] = [];
 
-    const secciones: string[] = [];
-    let seccionActual: string[] = [];
-    let headerActual: string | null = null;
+    // Límite óptimo para velocidad paralela con gpt-4o-mini
+    const TARGET_CHUNK_SIZE = 45; 
+    const MAX_CHUNK_SIZE = 80;
 
-    for (const linea of lineas) {
-        if (esSectionHeader(linea)) {
-            // Guardar sección anterior si tiene contenido
-            if (seccionActual.length > 0) {
-                secciones.push(seccionActual.join("\n"));
-            }
-            seccionActual = [linea];
-            headerActual = linea;
-        } else {
-            // Si no hay sección activa y estamos al inicio (antes del primer header),
-            // acumular en una sección "preámbulo"
-            if (headerActual === null && secciones.length === 0) {
-                seccionActual.push(linea);
-            } else {
-                seccionActual.push(linea);
-            }
+    for (let i = 0; i < lineas.length; i++) {
+        currentChunk.push(lineas[i]);
+        
+        // Si ya pasamos el target y hay linea vacía, cortamos
+        if (currentChunk.length >= TARGET_CHUNK_SIZE && lineas[i].trim() === "") {
+            chunks.push(currentChunk.join("\n"));
+            currentChunk = [];
+        } else if (currentChunk.length >= MAX_CHUNK_SIZE) {
+            // Hard cutoff si no hay saltos de línea y el chunk se vuelve muy pesado
+            chunks.push(currentChunk.join("\n"));
+            currentChunk = [];
         }
     }
 
-    // Guardar última sección
-    if (seccionActual.length > 0) {
-        secciones.push(seccionActual.join("\n"));
+    if (currentChunk.length > 0 && currentChunk.join("").trim().length > 0) {
+        chunks.push(currentChunk.join("\n"));
     }
 
-    // Filtrar secciones que no contienen ningún producto
-    const seccionesConProductos = secciones.filter((s) => {
-        const lineasSeccion = s.split("\n");
-        return lineasSeccion.some((l) => tieneProducto(l));
-    });
-
-    console.log(
-        `${TAG} Texto dividido en ${secciones.length} secciones, ${seccionesConProductos.length} contienen productos`
-    );
-
-    // Si el splitting no produjo resultados útiles, fallback al texto completo
-    if (seccionesConProductos.length === 0) {
-        console.warn(`${TAG} ⚠️ Ninguna sección contiene productos — fallback a bloque completo`);
-        return [textoRaw];
-    }
-
-    return seccionesConProductos;
+    console.log(`${TAG} Texto dividido agresivamente en ${chunks.length} chunks miniatura para máximo paralelismo.`);
+    return chunks;
 }
 
 // =============================================

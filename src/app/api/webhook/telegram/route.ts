@@ -10,18 +10,25 @@ const TAG = "[Telegram Webhook]";
 
 /**
  * Detecta el proveedor basado en el contenido del mensaje.
+ * Permite formatos como "/prov1", "/prov 2", "/proveedor 3", "/proveedor5"
  */
 function detectarProveedor(texto: string): ProveedorId | null {
     const textoLower = texto.toLowerCase();
-    if (texto.startsWith("/prov1") || textoLower.includes("cotización del momento")) {
-        console.log(`${TAG} Proveedor detectado: prov_1 (match: ${texto.startsWith("/prov1") ? "/prov1 command" : "cotización del momento"})`);
-        return "prov_1";
+    
+    // Buscar regex para /provN o /proveedor N
+    // Ejemplos válidos: /prov1, /prov 2, /proveedor 3, /proveedor4
+    const match = textoLower.match(/\/(?:prov|proveedor)\s*([1-5])/);
+    if (match && match[1]) {
+        const num = match[1]; // "1", "2", "3", "4", "5"
+        console.log(`${TAG} Proveedor detectado dinámicamente: prov_${num}`);
+        return `prov_${num}` as ProveedorId;
     }
-    if (texto.startsWith("/prov2") || textoLower.includes("lista de precios actualizada")) {
-        console.log(`${TAG} Proveedor detectado: prov_2 (match: ${texto.startsWith("/prov2") ? "/prov2 command" : "lista de precios actualizada"})`);
-        return "prov_2";
-    }
-    console.log(`${TAG} No se detectó proveedor. Texto no matchea ningún patrón. Primeros 200 chars: "${texto.slice(0, 200)}"`);
+
+    // Compatibilidad vieja (por si lo mandan sin comando pero tiene la frase clave)
+    if (textoLower.includes("cotización del momento")) return "prov_1";
+    if (textoLower.includes("lista de precios actualizada")) return "prov_2";
+
+    console.log(`${TAG} No se detectó proveedor. Primeros 200 chars: "${texto.slice(0, 200)}"`);
     return null;
 }
 
@@ -107,7 +114,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const proveedor = detectarProveedor(contenido);
 
     if (!proveedor) {
-        console.log(`${TAG} ℹ️ No es un mensaje de lista de precios — ignorando`);
+        console.log(`${TAG} ℹ️ No se detectó comando de proveedor — enviando mensaje de error al usuario`);
+        await responderTelegram(
+            chatId,
+            "⚠️ No se detectó a qué proveedor pertenece esta lista.\n\nPor favor, asegurate de incluir `/prov1` (hasta `/prov5`) al inicio de tu mensaje y volvé a enviarlo."
+        );
         return NextResponse.json({ ok: true });
     }
 
@@ -117,14 +128,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const productos = await parsearListaPrecios(contenido, proveedor);
         console.log(`${TAG} ✅ OpenAI retornó ${productos.length} productos:`, JSON.stringify(productos, null, 2));
 
-        console.log(`${TAG} Guardando en KV...`);
+        console.log(`${TAG} Guardando en KV para ${proveedor}...`);
         await saveStock(proveedor, productos);
         console.log(`${TAG} ✅ Stock guardado en KV`);
 
-        const nombreProv = proveedor === "prov_1" ? "Proveedor 1" : "Proveedor 2";
         await responderTelegram(
             chatId,
-            `✅ Stock actualizado: ${productos.length} productos insertados para ${nombreProv}.`
+            `✅ Stock actualizado: ${productos.length} productos insertados para el Proveedor ${proveedor.replace("prov_", "")}.`
         );
     } catch (err) {
         console.error(`${TAG} ❌ Error procesando lista:`, err);

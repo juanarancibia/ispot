@@ -1,5 +1,8 @@
-import { KV_KEYS, kv } from "@/lib/kv";
+import { kv } from "@/lib/kv";
 import { NextResponse } from "next/server";
+import type { ProveedorId } from "@/types";
+
+const PROVIDERS: ProveedorId[] = ["prov_1", "prov_2", "prov_3", "prov_4", "prov_5"];
 
 /**
  * POST /api/reset-db
@@ -7,8 +10,9 @@ import { NextResponse } from "next/server";
  */
 export async function POST(): Promise<NextResponse> {
     try {
-        await kv.del(KV_KEYS.STOCK_PROV_1);
-        await kv.del(KV_KEYS.STOCK_PROV_2);
+        await Promise.all(
+            PROVIDERS.map((prov) => kv.del(`stock:${prov}`))
+        );
 
         return NextResponse.json({ success: true, message: "Base de datos reseteada correctamente." });
     } catch (err) {

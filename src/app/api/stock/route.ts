@@ -8,9 +8,9 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest): Promise<NextResponse> {
     const proveedor = req.nextUrl.searchParams.get("proveedor") as ProveedorId | null;
 
-    if (!proveedor || (proveedor !== "prov_1" && proveedor !== "prov_2")) {
+    if (!proveedor || !/^prov_[1-5]$/.test(proveedor)) {
         return NextResponse.json(
-            { error: "Parámetro 'proveedor' inválido. Usar 'prov_1' o 'prov_2'." },
+            { error: "Parámetro 'proveedor' inválido. Usar 'prov_1' a 'prov_5'." },
             { status: 400 }
         );
     }
@@ -32,7 +32,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         const body = await req.json();
         const { proveedor, ...producto } = body as Producto & { proveedor: ProveedorId };
 
-        if (!proveedor || (proveedor !== "prov_1" && proveedor !== "prov_2")) {
+        if (!proveedor || !/^prov_[1-5]$/.test(proveedor)) {
             return NextResponse.json({ error: "Proveedor inválido." }, { status: 400 });
         }
 
@@ -60,7 +60,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     const proveedor = req.nextUrl.searchParams.get("proveedor") as ProveedorId | null;
     const id = req.nextUrl.searchParams.get("id");
 
-    if (!proveedor || (proveedor !== "prov_1" && proveedor !== "prov_2")) {
+    if (!proveedor || !/^prov_[1-5]$/.test(proveedor)) {
         return NextResponse.json({ error: "Proveedor inválido." }, { status: 400 });
     }
     if (!id) {

@@ -8,8 +8,6 @@ const TAG = "[KV Store]";
 // =============================================
 export const KV_KEYS = {
     CONFIG: "config_negocio",
-    STOCK_PROV_1: "stock:prov_1",
-    STOCK_PROV_2: "stock:prov_2",
 } as const;
 
 /**
@@ -18,6 +16,9 @@ export const KV_KEYS = {
 const DEFAULT_CONFIG: ConfigNegocio = {
     margen_prov_1: 1.15,
     margen_prov_2: 1.2,
+    margen_prov_3: 1.15,
+    margen_prov_4: 1.15,
+    margen_prov_5: 1.15,
     whatsapp_vendedor: "",
     mostrar_ars: true,
 };
@@ -57,7 +58,7 @@ export async function saveConfig(config: ConfigNegocio): Promise<void> {
  * Lee el stock de un proveedor desde KV. Devuelve un array vacío si no hay datos.
  */
 export async function getStock(proveedor: ProveedorId): Promise<Producto[]> {
-    const key = proveedor === "prov_1" ? KV_KEYS.STOCK_PROV_1 : KV_KEYS.STOCK_PROV_2;
+    const key = `stock:${proveedor}`;
     console.log(`${TAG} Leyendo stock de ${proveedor} (key: ${key})...`);
     const stock = await kv.get<Producto[]>(key);
     console.log(`${TAG} Stock de ${proveedor}: ${stock ? `${stock.length} productos` : "null (vacío)"}`);
@@ -68,7 +69,7 @@ export async function getStock(proveedor: ProveedorId): Promise<Producto[]> {
  * Reemplaza el stock actual de un proveedor con la nueva lista de productos.
  */
 export async function saveStock(proveedor: ProveedorId, productos: Producto[]): Promise<void> {
-    const key = proveedor === "prov_1" ? KV_KEYS.STOCK_PROV_1 : KV_KEYS.STOCK_PROV_2;
+    const key = `stock:${proveedor}`;
     console.log(`${TAG} Guardando ${productos.length} productos para ${proveedor} (key: ${key})...`);
     await kv.set(key, productos);
     console.log(`${TAG} ✅ Stock guardado para ${proveedor}`);

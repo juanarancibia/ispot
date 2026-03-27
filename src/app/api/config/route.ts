@@ -26,6 +26,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         if (
             body.margen_prov_1 === undefined ||
             body.margen_prov_2 === undefined ||
+            body.margen_prov_3 === undefined ||
+            body.margen_prov_4 === undefined ||
+            body.margen_prov_5 === undefined ||
             body.whatsapp_vendedor === undefined ||
             body.mostrar_ars === undefined
         ) {
@@ -35,6 +38,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const config: ConfigNegocio = {
             margen_prov_1: Number(body.margen_prov_1),
             margen_prov_2: Number(body.margen_prov_2),
+            margen_prov_3: Number(body.margen_prov_3),
+            margen_prov_4: Number(body.margen_prov_4),
+            margen_prov_5: Number(body.margen_prov_5),
             whatsapp_vendedor: String(body.whatsapp_vendedor),
             mostrar_ars: Boolean(body.mostrar_ars),
         };

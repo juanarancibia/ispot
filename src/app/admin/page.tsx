@@ -5,7 +5,9 @@ import type { ConfigNegocio, Producto, ProveedorId } from "@/types";
 import { AlertCircle, AlertTriangle, CheckCircle, Edit2, Loader2, RefreshCw, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-type StockData = { prov_1: Producto[]; prov_2: Producto[] };
+const PROVIDERS: ProveedorId[] = ["prov_1", "prov_2", "prov_3", "prov_4", "prov_5"];
+
+type StockData = Record<ProveedorId, Producto[]>;
 
 const CONDICION_BADGE: Record<string, string> = {
     Nuevo: "bg-neutral-100 text-neutral-600",
@@ -18,10 +20,15 @@ export default function AdminPage() {
     const [config, setConfig] = useState<ConfigNegocio>({
         margen_prov_1: 1.15,
         margen_prov_2: 1.2,
+        margen_prov_3: 1.15,
+        margen_prov_4: 1.15,
+        margen_prov_5: 1.15,
         whatsapp_vendedor: "",
         mostrar_ars: true,
     });
-    const [stock, setStock] = useState<StockData>({ prov_1: [], prov_2: [] });
+    const [stock, setStock] = useState<StockData>({
+        prov_1: [], prov_2: [], prov_3: [], prov_4: [], prov_5: []
+    });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -39,17 +46,20 @@ export default function AdminPage() {
         const load = async () => {
             setLoading(true);
             try {
-                const [configRes, stockP1Res, stockP2Res] = await Promise.all([
+                const [configRes, ...stockResps] = await Promise.all([
                     fetch("/api/config"),
-                    fetch("/api/stock?proveedor=prov_1"),
-                    fetch("/api/stock?proveedor=prov_2"),
+                    ...PROVIDERS.map((prov) => fetch(`/api/stock?proveedor=${prov}`))
                 ]);
+                
                 if (configRes.ok) setConfig(await configRes.json());
-                if (stockP1Res.ok) {
-                    const p1 = await stockP1Res.json();
-                    const p2 = stockP2Res.ok ? await stockP2Res.json() : [];
-                    setStock({ prov_1: p1, prov_2: p2 });
+                
+                const newStock = { ...stock };
+                for (let i = 0; i < PROVIDERS.length; i++) {
+                    const prov = PROVIDERS[i];
+                    const res = stockResps[i];
+                    newStock[prov] = res.ok ? await res.json() : [];
                 }
+                setStock(newStock);
             } finally {
                 setLoading(false);
             }
@@ -78,13 +88,19 @@ export default function AdminPage() {
     const handleRefreshStock = async () => {
         setLoading(true);
         try {
-            const [p1Res, p2Res] = await Promise.all([
-                fetch("/api/stock?proveedor=prov_1"),
-                fetch("/api/stock?proveedor=prov_2"),
-            ]);
-            if (p1Res.ok && p2Res.ok) {
-                setStock({ prov_1: await p1Res.json(), prov_2: await p2Res.json() });
+            const stockResps = await Promise.all(
+                PROVIDERS.map((prov) => fetch(`/api/stock?proveedor=${prov}`))
+            );
+            
+            const newStock = { ...stock };
+            for (let i = 0; i < PROVIDERS.length; i++) {
+                const prov = PROVIDERS[i];
+                const res = stockResps[i];
+                if (res.ok) {
+                    newStock[prov] = await res.json();
+                }
             }
+            setStock(newStock);
         } finally {
             setLoading(false);
         }
@@ -174,7 +190,7 @@ export default function AdminPage() {
                     </div>
                     <div className="space-y-1.5">
                         <label htmlFor="margen_prov_1" className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">
-                            Margen Proveedor 1 (ej: 1.15 = 15%)
+                            Margen Prov 1 (%)
                         </label>
                         <input
                             id="margen_prov_1"
@@ -188,7 +204,7 @@ export default function AdminPage() {
                     </div>
                     <div className="space-y-1.5">
                         <label htmlFor="margen_prov_2" className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">
-                            Margen Proveedor 2 (ej: 1.20 = 20%)
+                            Margen Prov 2 (%)
                         </label>
                         <input
                             id="margen_prov_2"
@@ -196,6 +212,48 @@ export default function AdminPage() {
                             step="0.01"
                             value={config.margen_prov_2}
                             onChange={(e) => setConfig((c) => ({ ...c, margen_prov_2: Number(e.target.value) }))}
+                            className={inputClass}
+                            min={1}
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label htmlFor="margen_prov_3" className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">
+                            Margen Prov 3 (%)
+                        </label>
+                        <input
+                            id="margen_prov_3"
+                            type="number"
+                            step="0.01"
+                            value={config.margen_prov_3}
+                            onChange={(e) => setConfig((c) => ({ ...c, margen_prov_3: Number(e.target.value) }))}
+                            className={inputClass}
+                            min={1}
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label htmlFor="margen_prov_4" className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">
+                            Margen Prov 4 (%)
+                        </label>
+                        <input
+                            id="margen_prov_4"
+                            type="number"
+                            step="0.01"
+                            value={config.margen_prov_4}
+                            onChange={(e) => setConfig((c) => ({ ...c, margen_prov_4: Number(e.target.value) }))}
+                            className={inputClass}
+                            min={1}
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label htmlFor="margen_prov_5" className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">
+                            Margen Prov 5 (%)
+                        </label>
+                        <input
+                            id="margen_prov_5"
+                            type="number"
+                            step="0.01"
+                            value={config.margen_prov_5}
+                            onChange={(e) => setConfig((c) => ({ ...c, margen_prov_5: Number(e.target.value) }))}
                             className={inputClass}
                             min={1}
                         />
@@ -256,22 +314,22 @@ export default function AdminPage() {
                     </button>
                 </div>
 
-                {(["prov_1", "prov_2"] as const).map((prov) => (
+                {PROVIDERS.map((prov) => (
                     <div key={prov} className="bg-white border border-neutral-100 rounded-2xl overflow-hidden shadow-sm">
                         <div className="px-5 py-3 border-b border-neutral-100 flex items-center justify-between">
                             <h3 className="font-semibold text-neutral-800">
-                                {prov === "prov_1" ? "Proveedor 1" : "Proveedor 2"}
+                                Proveedor {prov.split("_")[1]}
                             </h3>
-                            <span className="text-xs text-neutral-500">{stock[prov].length} productos</span>
+                            <span className="text-xs text-neutral-500">{stock[prov]?.length || 0} productos</span>
                         </div>
                         <div className="overflow-x-auto">
-                            {stock[prov].length === 0 ? (
+                            {!stock[prov] || stock[prov].length === 0 ? (
                                 <p className="text-neutral-400 text-sm p-5">Sin stock cargado para este proveedor.</p>
                             ) : (
                                 <table className="w-full text-sm">
                                     <thead className="bg-neutral-50/80">
                                         <tr>
-                                            {["Marca", "Modelo", "Variantes", "USD", "ARS", "Condición", "Acciones"].map((h) => (
+                                            {["Marca", "Modelo", "Variantes", "USD", "ARS", "Condición", "Tipo", "Acciones"].map((h) => (
                                                 <th
                                                     key={h}
                                                     className="text-left px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-widest"
@@ -303,6 +361,13 @@ export default function AdminPage() {
                                                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${CONDICION_BADGE[p.condicion] ?? "bg-neutral-100 text-neutral-600"}`}>
                                                         {p.condicion}
                                                     </span>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    {p.precio_manual_usd || p.precio_manual_ars ? (
+                                                        <span className="text-[10px] font-bold text-white bg-purple-500 px-2 py-0.5 rounded-full" title="Precio sobreescrito manualmente">
+                                                            Manual
+                                                        </span>
+                                                    ) : "Auto"}
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center gap-2">
@@ -413,25 +478,39 @@ export default function AdminPage() {
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">
-                                    Variantes (separadas por coma)
-                                </label>
-                                <input
-                                    type="text"
-                                    value={editingProduct.variantes.join(", ")}
-                                    onChange={(e) => {
-                                        const parts = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
-                                        setEditingProduct({ ...editingProduct, variantes: parts });
-                                    }}
-                                    className={inputClass}
-                                    placeholder="Ej: 128GB, 256GB"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">
+                                        Variantes (separadas por coma)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editingProduct.variantes.join(", ")}
+                                        onChange={(e) => {
+                                            const parts = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
+                                            setEditingProduct({ ...editingProduct, variantes: parts });
+                                        }}
+                                        className={inputClass}
+                                        placeholder="Ej: 128GB, 256GB"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">
+                                        Almacenamiento (opcional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editingProduct.almacenamiento || ""}
+                                        onChange={(e) => setEditingProduct({ ...editingProduct, almacenamiento: e.target.value ? e.target.value : undefined })}
+                                        className={inputClass}
+                                        placeholder="Ej: 256GB"
+                                    />
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Precio USD</label>
+                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Precio Proveedor USD</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <span className="text-neutral-500 sm:text-sm">$</span>
@@ -446,7 +525,7 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Precio ARS (0 = N/A)</label>
+                                    <label className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Precio Proveedor ARS (0=N/A)</label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <span className="text-neutral-500 sm:text-sm">$</span>
@@ -456,6 +535,39 @@ export default function AdminPage() {
                                             value={editingProduct.precio_ars || 0}
                                             onChange={(e) => setEditingProduct({ ...editingProduct, precio_ars: Number(e.target.value) === 0 ? null : Number(e.target.value) })}
                                             className={`${inputClass} pl-7`}
+                                            min={0}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">Precio MANUAL USD (0=Auto)</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span className="text-neutral-500 sm:text-sm">$</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={editingProduct.precio_manual_usd || 0}
+                                            onChange={(e) => setEditingProduct({ ...editingProduct, precio_manual_usd: Number(e.target.value) === 0 ? null : Number(e.target.value) })}
+                                            className={`${inputClass} pl-7 border-purple-200 focus:ring-purple-500/20`}
+                                            min={0}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">Precio MANUAL ARS (0=Auto)</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span className="text-neutral-500 sm:text-sm">$</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            value={editingProduct.precio_manual_ars || 0}
+                                            onChange={(e) => setEditingProduct({ ...editingProduct, precio_manual_ars: Number(e.target.value) === 0 ? null : Number(e.target.value) })}
+                                            className={`${inputClass} pl-7 border-purple-200 focus:ring-purple-500/20`}
                                             min={0}
                                         />
                                     </div>

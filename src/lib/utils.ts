@@ -36,13 +36,22 @@ export function calcularPrecioFinal(
     precioUsd: number,
     precioArs: number | null,
     margen: number,
-    mostrarArs: boolean
+    mostrarArs: boolean,
+    precioManualUsd?: number | null,
+    precioManualArs?: number | null
 ): { precio_final_usd: number; precio_final_ars: number | null } {
-    const precio_final_usd = Math.round(precioUsd * margen);
-    let precio_final_ars: number | null = null;
+    let precio_final_usd = Math.round(precioUsd * margen);
+    if (precioManualUsd != null && precioManualUsd > 0) {
+        precio_final_usd = precioManualUsd;
+    }
 
-    if (mostrarArs && precioArs !== null && precioArs > 0) {
-        precio_final_ars = Math.round(precioArs * margen);
+    let precio_final_ars: number | null = null;
+    if (mostrarArs) {
+        if (precioManualArs != null && precioManualArs > 0) {
+            precio_final_ars = precioManualArs;
+        } else if (precioArs !== null && precioArs > 0) {
+            precio_final_ars = Math.round(precioArs * margen);
+        }
     }
 
     return {

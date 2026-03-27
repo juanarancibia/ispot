@@ -11,30 +11,32 @@ interface ProductGridProps {
 
 export default function ProductGrid({ productos }: ProductGridProps) {
     const [busqueda, setBusqueda] = useState("");
-    const [filtroCategoria, setFiltroCategoria] = useState<string>("Todas");
     const [filtroCondicion, setFiltroCondicion] = useState<string>("Todos");
+    const [filtroAlmacenamiento, setFiltroAlmacenamiento] = useState<string>("Todos");
 
-    const categoriasRaw = Array.from(new Set(productos.map((p) => p.categoria)));
-    const categorias = ["Todas", ...categoriasRaw.filter(Boolean)] as string[];
     const condicionesRaw = Array.from(new Set(productos.map((p) => p.condicion)));
     const condiciones = ["Todos", ...condicionesRaw.filter(Boolean)] as string[];
+
+    const almacenamientosRaw = Array.from(new Set(productos.map((p) => p.almacenamiento)));
+    const almacenamientos = ["Todos", ...almacenamientosRaw.filter(Boolean)] as string[];
+    const showAlmacenamientoFilter = almacenamientos.length > 1; // "Todos" + at least one actual storage
 
     const productosFiltrados = useMemo(() => {
         return productos.filter((p) => {
             const matchBusqueda =
                 busqueda === "" ||
                 `${p.marca} ${p.modelo}`.toLowerCase().includes(busqueda.toLowerCase());
-            const matchCategoria = filtroCategoria === "Todas" || p.categoria === filtroCategoria;
             const matchCondicion = filtroCondicion === "Todos" || p.condicion === filtroCondicion;
-            return matchBusqueda && matchCategoria && matchCondicion;
+            const matchAlmacenamiento = filtroAlmacenamiento === "Todos" || p.almacenamiento === filtroAlmacenamiento;
+            return matchBusqueda && matchCondicion && matchAlmacenamiento;
         });
-    }, [productos, busqueda, filtroCategoria, filtroCondicion]);
+    }, [productos, busqueda, filtroCondicion, filtroAlmacenamiento]);
 
     return (
         <div>
             {/* Barra de búsqueda + filtros — sticky */}
             <div className="sticky top-[49px] sm:top-[57px] z-20 bg-neutral-50/90 backdrop-blur-md -mx-5 px-5 sm:-mx-8 sm:px-8 py-3 border-b border-neutral-200/50 mb-5">
-                <div className="flex flex-col gap-2 items-left">
+                <div className="flex flex-col gap-2">
                     <div className="relative flex-1">
                         <Search
                             size={15}
@@ -43,22 +45,21 @@ export default function ProductGrid({ productos }: ProductGridProps) {
                         <input
                             id="product-search"
                             type="text"
-                            placeholder="Buscar..."
+                            placeholder="Buscar productos..."
                             value={busqueda}
                             onChange={(e) => setBusqueda(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 bg-white border border-neutral-200 focus:border-blue-500 rounded-full text-neutral-900 text-sm placeholder:text-neutral-400 outline-none transition-all focus:ring-2 focus:ring-blue-500/20"
                         />
                     </div>
 
-                    {/* Filtro pills de Categorías */}
-                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-                        {categorias.map((c) => (
+                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                        {condiciones.map((c) => (
                             <button
                                 key={c}
-                                id={`filter-cat-${c.toLowerCase().replace(/\s/g, "-")}`}
-                                onClick={() => setFiltroCategoria(c)}
-                                className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-medium transition-all duration-150 ${filtroCategoria === c
-                                    ? "bg-neutral-800 text-white shadow-sm"
+                                id={`filter-${c.toLowerCase().replace(/\s/g, "-")}`}
+                                onClick={() => setFiltroCondicion(c)}
+                                className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-medium transition-all duration-150 ${filtroCondicion === c
+                                    ? "bg-blue-600 text-white shadow-sm"
                                     : "bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100"
                                     }`}
                             >
@@ -67,22 +68,25 @@ export default function ProductGrid({ productos }: ProductGridProps) {
                         ))}
                     </div>
 
-                    {/* Filtro pills de Condición en mobile */}
-                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-                        {condiciones.map((c) => (
-                            <button
-                                key={c}
-                                id={`filter-${c.toLowerCase().replace(/\s/g, "-")}`}
-                                onClick={() => setFiltroCondicion(c)}
-                                className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-medium transition-all duration-150 ${filtroCondicion === c
-                                    ? "bg-blue-600 text-white shadow-sm"
-                                    : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 active:bg-neutral-200"
-                                    }`}
-                            >
-                                {c}
-                            </button>
-                        ))}
-                    </div>
+                    {/* Filtro pills de Almacenamiento (solo visible si aplica) */}
+                    {showAlmacenamientoFilter && (
+                        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                            <span className="text-xs text-neutral-400 font-medium self-center mr-1">Capacidad:</span>
+                            {almacenamientos.map((a) => (
+                                <button
+                                    key={a}
+                                    id={`filter-storage-${a.toLowerCase().replace(/\s/g, "-")}`}
+                                    onClick={() => setFiltroAlmacenamiento(a)}
+                                    className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-150 ${filtroAlmacenamiento === a
+                                        ? "bg-neutral-800 text-white shadow-sm"
+                                        : "bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100"
+                                        }`}
+                                >
+                                    {a}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
