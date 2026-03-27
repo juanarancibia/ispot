@@ -83,6 +83,9 @@ describe("parsearListaPrecios — Provider 1", () => {
             expect(p.modelo).toBeDefined();
             expect(typeof p.modelo).toBe("string");
             expect(p.modelo.length).toBeGreaterThan(0);
+            expect(p.categoria).toBeDefined();
+            expect(typeof p.categoria).toBe("string");
+            expect(p.categoria.length).toBeGreaterThan(0);
             expect(Array.isArray(p.variantes)).toBe(true);
             expect(typeof p.precio_usd).toBe("number");
             expect(p.precio_usd).toBeGreaterThan(0);
@@ -162,6 +165,9 @@ describe("parsearListaPrecios — Provider 2", () => {
             expect(p.marca.length).toBeGreaterThan(0);
             expect(p.modelo).toBeDefined();
             expect(p.modelo.length).toBeGreaterThan(0);
+            expect(p.categoria).toBeDefined();
+            expect(typeof p.categoria).toBe("string");
+            expect(p.categoria.length).toBeGreaterThan(0);
             expect(typeof p.precio_usd).toBe("number");
             expect(p.precio_usd).toBeGreaterThan(0);
             expect(["Nuevo", "Usado", "CPO", "AS IS"]).toContain(p.condicion);

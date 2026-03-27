@@ -29,6 +29,7 @@ export interface Producto {
   id: string;
   marca: string;
   modelo: string;
+  categoria: string;
   variantes: string[];
   precio_usd: number;
   precio_ars: number | null;

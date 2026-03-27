@@ -9,6 +9,7 @@ const TAG = "[AI Parser]";
 interface ProductoRaw {
     marca: string;
     modelo: string;
+    categoria: string;
     variantes: string[];
     precio_usd: number;
     precio_ars: number | null;
@@ -30,6 +31,7 @@ ESQUEMA POR PRODUCTO:
 {
   "marca": "String — Apple, Samsung, Xiaomi, Motorola, Infinix, OPPO, JBL, PlayStation, Nintendo, etc. Inferila si no está explícita.",
   "modelo": "String — nombre COMPLETO. Ejemplos: 'iPhone 15 Pro 128GB', 'Samsung Galaxy S25 Ultra 512GB', 'MacBook Air M4 13\" 256GB'. Si el texto dice solo '14 128gb', completalo a 'iPhone 14 128GB' según el contexto de la sección.",
+  "categoria": "String — 'Smartphones', 'Tablets', 'Audio', 'Cámaras Fotográficas', 'Computadoras MacBook Air y Pro', 'Consolas', 'Accesorios', etc. Inferila según el tipo de producto. Por defecto 'Smartphones'.",
   "variantes": ["String"] — Array de colores disponibles. Ej: ["Black", "Silver"]. Si no hay colores, devolvé un array vacío []. Ignorá porcentajes de batería (ej: 89%) y emojis de colores.",
   "precio_usd": Number — Precio en dólares como entero (sin decimales ni separadores de miles),
   "precio_ars": Number | null — Precio en pesos argentinos si existe, como entero SIN separadores (ej: el texto "$1,450,000" → 1450000). null si no hay precio en pesos,

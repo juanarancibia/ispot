@@ -11,19 +11,24 @@ interface ProductGridProps {
 
 export default function ProductGrid({ productos }: ProductGridProps) {
     const [busqueda, setBusqueda] = useState("");
+    const [filtroCategoria, setFiltroCategoria] = useState<string>("Todas");
     const [filtroCondicion, setFiltroCondicion] = useState<string>("Todos");
 
-    const condiciones = ["Todos", ...Array.from(new Set(productos.map((p) => p.condicion)))];
+    const categoriasRaw = Array.from(new Set(productos.map((p) => p.categoria)));
+    const categorias = ["Todas", ...categoriasRaw.filter(Boolean)] as string[];
+    const condicionesRaw = Array.from(new Set(productos.map((p) => p.condicion)));
+    const condiciones = ["Todos", ...condicionesRaw.filter(Boolean)] as string[];
 
     const productosFiltrados = useMemo(() => {
         return productos.filter((p) => {
             const matchBusqueda =
                 busqueda === "" ||
                 `${p.marca} ${p.modelo}`.toLowerCase().includes(busqueda.toLowerCase());
+            const matchCategoria = filtroCategoria === "Todas" || p.categoria === filtroCategoria;
             const matchCondicion = filtroCondicion === "Todos" || p.condicion === filtroCondicion;
-            return matchBusqueda && matchCondicion;
+            return matchBusqueda && matchCategoria && matchCondicion;
         });
-    }, [productos, busqueda, filtroCondicion]);
+    }, [productos, busqueda, filtroCategoria, filtroCondicion]);
 
     return (
         <div>
@@ -45,7 +50,24 @@ export default function ProductGrid({ productos }: ProductGridProps) {
                         />
                     </div>
 
-                    {/* Filtro pills scrollable en mobile */}
+                    {/* Filtro pills de Categorías */}
+                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                        {categorias.map((c) => (
+                            <button
+                                key={c}
+                                id={`filter-cat-${c.toLowerCase().replace(/\s/g, "-")}`}
+                                onClick={() => setFiltroCategoria(c)}
+                                className={`flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-medium transition-all duration-150 ${filtroCategoria === c
+                                    ? "bg-neutral-800 text-white shadow-sm"
+                                    : "bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100"
+                                    }`}
+                            >
+                                {c}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Filtro pills de Condición en mobile */}
                     <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                         {condiciones.map((c) => (
                             <button
