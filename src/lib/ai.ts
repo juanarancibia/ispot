@@ -34,7 +34,7 @@ ESQUEMA POR PRODUCTO:
 {
   "marca": "String — Apple, Samsung, DJI, Nikon, Canon, Sigma, Xiaomi, etc. Inferila si no está explícita.",
   "modelo": "String — nombre COMPLETO. Ejemplos: 'iPhone 15 Pro 128GB', 'DJI Mini 4 Pro', 'Lente Sigma 35mm para Nikon'. Si el texto dice solo '14 128gb', completalo a 'iPhone 14 128GB' según la sección.",
-  "categoria": "String — 'Smartphones', 'Tablets', 'Audio', 'Cámaras Fotográficas', 'Lentes de cámara', 'Drones', 'iPads', 'Computadoras MacBook Air y Pro', 'Consolas', 'Accesorios', etc. Inferila según el tipo. OJO: Para lentes separá la categoría o marca si podés (ej: si es Nikon, poné marca Nikon y categoria 'Lentes de cámara').",
+  "categoria": "String — 'Smartphones', 'Tablets', 'Audio', 'Cámaras Fotográficas', 'Lentes de Fotografía', 'Drones', 'iPads', 'Computadoras MacBook Air y Pro', 'Consolas', 'Accesorios', etc. Inferila según el tipo. OJO: Para lentes separá la categoría o marca si podés (ej: si es Nikon, poné marca Nikon y categoria 'Lentes de Fotografía').",
   "variantes": ["String"] — Array de colores o características extra disponibles. Ejec: ["Black", "Silver"]. Vacío [] si no hay.",
   "precio_usd": Number — Precio en dólares como entero,
   "precio_ars": Number | null — Precio en pesos argentinos o null,

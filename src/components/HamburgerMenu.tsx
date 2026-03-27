@@ -31,74 +31,72 @@ export default function HamburgerMenu({ categorias }: { categorias: string[] }) 
                 <Menu size={24} />
             </button>
 
-            {isOpen && (
-                <div className="fixed inset-0 z-[100] flex">
-                    <div 
-                        className="absolute inset-0 bg-neutral-900/40 backdrop-blur-[2px] transition-opacity"
-                        onClick={() => setIsOpen(false)}
-                    />
-                    <div className="relative w-[80%] max-w-[320px] h-[100dvh] bg-white flex flex-col shadow-2xl animate-in slide-in-from-left duration-300">
-                        {/* Drawer Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-neutral-100">
-                            <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Navegación</h2>
-                            <button 
-                                onClick={() => setIsOpen(false)}
-                                className="p-2 -mr-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors rounded-full"
-                                aria-label="Cerrar menú"
-                            >
-                                <X size={20} />
-                            </button>
+            <div 
+                className={`fixed inset-0 z-[100] transition-all duration-300 ease-in-out ${isOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"}`}
+            >
+                {/* Backdrop Layer */}
+                <div 
+                    className="absolute inset-0 bg-neutral-900/40 backdrop-blur-[2px]"
+                    onClick={() => setIsOpen(false)}
+                />
+
+                {/* Drawer Panel */}
+                <div 
+                    className={`absolute left-0 top-0 w-[80%] max-w-[320px] h-[100dvh] bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+                >
+                    {/* Drawer Header */}
+                    <div className="flex items-center justify-between p-5 border-b border-neutral-100">
+                        <h2 className="text-lg font-semibold tracking-tight text-neutral-900">Navegación</h2>
+                        <button 
+                            onClick={() => setIsOpen(false)}
+                            className="p-2 -mr-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-colors rounded-full"
+                            aria-label="Cerrar menú"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
+                    
+                    {/* Drawer Body (Enlaces) */}
+                    <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-1">
+                        <Link 
+                            href="/" 
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${pathname === "/" ? "bg-blue-50 text-blue-600 font-medium" : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"}`}
+                        >
+                            <Home size={18} className={pathname === "/" ? "text-blue-600" : "text-neutral-400"} />
+                            <span>Inicio</span>
+                        </Link>
+
+                        <div className="mt-4 mb-2 px-4">
+                            <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-widest">
+                                Categorías
+                            </h3>
                         </div>
                         
-                        {/* Drawer Body (Enlaces) */}
-                        <div className="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-1">
-                            <Link 
-                                href="/" 
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${pathname === "/" ? "bg-blue-50 text-blue-600 font-medium" : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"}`}
-                            >
-                                <Home size={18} className={pathname === "/" ? "text-blue-600" : "text-neutral-400"} />
-                                <span>Inicio</span>
-                            </Link>
+                        {categorias.map((c) => {
+                            const slug = encodeURIComponent(c);
+                            const href = `/categoria/${slug}`;
+                            const decodedPath = decodeURIComponent(pathname);
+                            const isCategoryMatch = decodedPath === `/categoria/${c}`;
 
-                            <div className="mt-4 mb-2 px-4">
-                                <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-widest">
-                                    Categorías
-                                </h3>
-                            </div>
-                            
-                            {categorias.map((c) => {
-                                // Para crear un slug compatible con rutas robustas
-                                const slug = encodeURIComponent(c);
-                                // The decoded path for comparison:
-                                const expectedPath = `/categoria/${encodeURIComponent(c).replace(/%20/g, '-')}`; 
-                                // wait, next.js uses raw strings. encodeURIComponent makes %20.
-                                // It's safer to just encode the raw c. The router will pass it to params.slug.
-                                const href = `/categoria/${slug}`;
-                                
-                                // To check if active, compare decoded pathname
-                                const decodedPath = decodeURIComponent(pathname);
-                                const isCategoryMatch = decodedPath === `/categoria/${c}`;
-
-                                return (
-                                    <Link 
-                                        key={c}
-                                        href={href}
-                                        className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${isCategoryMatch ? "bg-blue-50 text-blue-600 font-medium" : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"}`}
-                                    >
-                                        <span>{c}</span>
-                                        <ChevronRight size={16} className={isCategoryMatch ? "text-blue-600" : "text-neutral-300"} />
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                        
-                        {/* Footer Logo */}
-                        <div className="p-5 border-t border-neutral-100 flex justify-center">
-                            <img src="/assets/ispot_logo.jpg" alt="iSpot Logo" className="h-6 w-auto mix-blend-multiply opacity-50" />
-                        </div>
+                            return (
+                                <Link 
+                                    key={c}
+                                    href={href}
+                                    className={`flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${isCategoryMatch ? "bg-blue-50 text-blue-600 font-medium" : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"}`}
+                                >
+                                    <span>{c}</span>
+                                    <ChevronRight size={16} className={isCategoryMatch ? "text-blue-600" : "text-neutral-300"} />
+                                </Link>
+                            );
+                        })}
+                    </div>
+                    
+                    {/* Footer Logo */}
+                    <div className="p-5 border-t border-neutral-100 flex justify-center">
+                        <img src="/assets/ispot_logo.jpg" alt="iSpot Logo" className="h-6 w-auto mix-blend-multiply opacity-50" />
                     </div>
                 </div>
-            )}
+            </div>
         </>
     );
 }
