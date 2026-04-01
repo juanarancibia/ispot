@@ -40,7 +40,7 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
             <button
                 id="cart-button"
                 onClick={() => setOpen(true)}
-                className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 text-white pl-4 pr-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm cursor-pointer"
+                className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-[60] flex items-center gap-2 text-white pl-4 pr-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm cursor-pointer"
                 style={{
                     background: "var(--theme-accent)",
                     boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25)",
@@ -62,7 +62,7 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
             {/* Overlay */}
             {open && (
                 <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-[109]"
                     style={{
                         background: "var(--theme-overlay)",
                         backdropFilter: "blur(5px)",
@@ -74,7 +74,7 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
 
             {/* Sheet sidebar */}
             <div
-                className={`fixed top-0 right-0 z-50 h-full w-full sm:max-w-md flex flex-col transition-transform duration-400 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
+                className={`fixed top-0 right-0 z-[110] h-full w-full sm:max-w-md flex flex-col transition-transform duration-400 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
                 style={{
                     background: "var(--theme-modal)",
                     borderLeft: "1px solid var(--theme-card-border)",
