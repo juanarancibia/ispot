@@ -33,14 +33,27 @@ REGLAS ESTRICTAS:
 ESQUEMA POR PRODUCTO:
 {
   "marca": "String — Apple, Samsung, DJI, Nikon, Canon, Sigma, Xiaomi, etc. Inferila si no está explícita.",
-  "modelo": "String — nombre COMPLETO. Ejemplos: 'iPhone 15 Pro 128GB', 'DJI Mini 4 Pro', 'Lente Sigma 35mm para Nikon'. Si el texto dice solo '14 128gb', completalo a 'iPhone 14 128GB' según la sección.",
-  "categoria": "String — 'Smartphones', 'Tablets', 'Audio', 'Cámaras Fotográficas', 'Lentes de Fotografía', 'Drones', 'iPads', 'Computadoras MacBook Air y Pro', 'Consolas', 'Accesorios', etc. Inferila según el tipo. OJO: Para lentes separá la categoría o marca si podés (ej: si es Nikon, poné marca Nikon y categoria 'Lentes de Fotografía').",
+  "modelo": "String — nombre COMPLETO. Ejemplos: 'iPhone 15 Pro 128GB', 'DJI Mini 4 Pro', 'Lente Canon EF 16-35 F/4L IS USM', 'Lente Sigma 35mm para Nikon'. Si el texto dice solo '14 128gb', completalo a 'iPhone 14 128GB' según la sección.",
+  "categoria": "String — 'Smartphones', 'Tablets', 'Audio', 'Cámaras Fotográficas', 'Lentes de Fotografía', 'Drones', 'iPads', 'Computadoras MacBook Air y Pro', 'Consolas', 'Accesorios', etc. Inferila según el tipo. OJO: Para lentes separá la categoría o marca si podés (ej: si es Nikon, poné marca Nikon y categoria 'Lentes de Fotografía'). Para lentes y cuerpos de cámaras Canon, Nikon, Sony etc., usá 'Lentes de Fotografía' o 'Cámaras Fotográficas' según corresponda.",
   "variantes": ["String"] — Array de colores o características extra disponibles. Ejec: ["Black", "Silver"]. Vacío [] si no hay.",
-  "precio_usd": Number — Precio en dólares como entero,
+  "precio_usd": Number — Precio en dólares como entero. MUY IMPORTANTE: siempre devolvé un entero sin decimales.",
   "precio_ars": Number | null — Precio en pesos argentinos o null,
-  "almacenamiento": "String | null — SÓLO si es MacBook, iPad, o Smartphone (ej: '256GB', '512GB', '1TB', '2TB'). null si no aplica.",
+  "almacenamiento": "String | null — SÓLO si es MacBook, iPad, o Smartphone (ej: '256GB', '512GB', '1TB', '2TB'). null si no aplica. NO aplica para cámaras ni lentes.",
   "condicion": "String — Uno de: 'Nuevo', 'Usado', 'CPO', 'AS IS'."
 }
+
+NOTACIONES DE PRECIO ARGENTINAS:
+- "u$", "U$S", "US$", "u$s" son todas notaciones equivalentes a USD. Ej: "u$ 480" = 480 USD.
+- "USD" precedido de un número: "USD 1150" = 1150 USD.
+- El PUNTO en precios argentinos es separador de miles, NO decimal. Ej: "u$ 1.150" = 1150 USD, "u$ 2.300" = 2300 USD. NUNCA interpretes "1.150" como "uno punto quince".
+- La COMA en precios argentinos también puede ser separador de miles en pesos. Pero OJO: en especificaciones de lentes como "F/1,4" la coma es un decimal de la apertura focal, NO un precio.
+- Precios en formato "* u$ 1.150 - EF 16-35 F/4L IS USM" → el precio está ANTES del nombre del producto, separado por " - ".
+
+FORMATOS DE LISTA FRECUENTES:
+- "* u$ PRECIO - NOMBRE_PRODUCTO" → precio antes del producto con guión separador.
+- "NOMBRE_PRODUCTO\t\tPRECIO" → formato tabular con tabs.
+- "🔥NOMBRE $PRECIO" → emoji seguido de nombre y precio.
+- Encabezados como "🔴 CANON (Monturas RF y EF)" indican la marca/sección, no son productos.
 
 CASOS ESPECIALES:
 - Los colores en líneas separadas debajo de un producto (ej: "⚫ Black 100%", "🔵 Blue 92%") son variantes del producto inmediatamente anterior.
@@ -51,6 +64,46 @@ CASOS ESPECIALES:
 - Precios en formato tabular con tabs: el primer número es USD, el tercer número (con $ y separadores de miles) es ARS.
 
 Si el fragmento no contiene productos (solo texto informativo), devolvé: {"productos": []}`;
+
+// =============================================
+// Text Normalization (pre-LLM)
+// =============================================
+
+/**
+ * Normaliza el texto crudo del proveedor ANTES de enviarlo al LLM.
+ *
+ * Transformaciones:
+ * 1. "u$", "U$S", "US$", "u$s" → "USD"
+ * 2. Precios con punto como separador de miles (ej: "1.150") → entero ("1150")
+ *    Solo cuando están en contexto de precio (después de USD/u$/ etc.)
+ * 3. Limpieza de doble $$ → $
+ */
+export function normalizarTexto(texto: string): string {
+    let result = texto;
+
+    // 1. Normalizar notaciones de dólar argentinas a "USD"
+    //    u$s, U$S, US$, u$ → USD (en ese orden para evitar reemplazos parciales)
+    result = result.replace(/[uU]\$[sS]/g, "USD");
+    result = result.replace(/US\$/g, "USD");
+    // "u$ " o "u$" seguido de dígito — cuidado de no capturar "u$s" ya reemplazado
+    result = result.replace(/[uU]\$\s*/g, "USD ");
+
+    // 2. Normalizar precios con punto como separador de miles.
+    //    Patrón: "USD 1.150" o "USD1.150" → "USD 1150"
+    //    Solo matcheamos punto seguido de exactamente 3 dígitos (separador de miles)
+    //    Repetimos para manejar "1.150.000" → "1150000"
+    result = result.replace(
+        /(USD\s*)(\d{1,3}(?:\.\d{3})+)\b/g,
+        (_match, prefix: string, numWithDots: string) => {
+            return prefix + numWithDots.replace(/\./g, "");
+        }
+    );
+
+    // 3. Normalizar doble $$ → $
+    result = result.replace(/\$\$/g, "$");
+
+    return result;
+}
 
 // =============================================
 // Section Splitting
@@ -233,6 +286,11 @@ export async function parsearListaPrecios(
     console.log(`${TAG} Input: ${textoRaw.length} chars, ${textoRaw.split("\n").length} líneas`);
 
     const startTime = Date.now();
+
+    // Step 0: Normalizar texto (u$ → USD, puntos de miles, etc.)
+    textoRaw = normalizarTexto(textoRaw);
+    console.log(`${TAG} Texto normalizado (${textoRaw.length} chars)`);
+
 
     // Step 1: Split en secciones
     const secciones = splitEnSecciones(textoRaw);

@@ -2,6 +2,7 @@ import { getStock } from "@/lib/kv";
 import { MOCK_STOCK_PROV_1, MOCK_STOCK_PROV_2 } from "@/lib/mockData";
 import HamburgerMenu from "./HamburgerMenu";
 import type { ProveedorId } from "@/types";
+import HeaderClient from "./HeaderClient";
 
 const PROVIDERS: ProveedorId[] = ["prov_1", "prov_2", "prov_3", "prov_4", "prov_5"];
 
@@ -24,17 +25,23 @@ export default async function Header() {
     const categorias = await getCategorias();
 
     return (
-        <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-neutral-200/50">
-            <div className="max-w-7xl mx-auto flex items-center justify-between px-5 py-3 sm:px-8 sm:py-4">
+        <header
+            className="sticky top-0 z-50 border-b border-th-border"
+            style={{
+                background: "var(--theme-header)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                transition: "background-color 0.3s ease",
+            }}
+        >
+            <div className="max-w-[1200px] mx-auto flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 gap-3">
+                {/* Left: Hamburger */}
                 <HamburgerMenu categorias={categorias} />
-                
-                <div className="flex-1 flex justify-center">
-                    <img src="/assets/ispot_logo.jpg" alt="iSpot Logo" className="h-7 sm:h-8 w-auto mix-blend-multiply" />
-                </div>
-                
-                <div className="w-8">
-                    {/* Placeholder for symmetry */}
-                </div>
+
+                {/* Center: Logo */}
+                <HeaderClient />
+
+                {/* Right: Theme Toggle + Cart (rendered by HeaderClient) */}
             </div>
         </header>
     );

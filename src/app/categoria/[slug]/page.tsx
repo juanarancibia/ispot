@@ -5,7 +5,7 @@ import { MOCK_STOCK_PROV_1, MOCK_STOCK_PROV_2 } from "@/lib/mockData";
 import { calcularPrecioFinal } from "@/lib/utils";
 import { getProductImageServerFallback } from "@/lib/serverUtils";
 import type { ConfigNegocio, Producto, ProductoConPrecio, ProveedorId } from "@/types";
-import { ChevronRight, Home, Smartphone } from "lucide-react";
+import { ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -75,27 +75,36 @@ export default async function CategoriaPage(props: { params: Promise<{ slug: str
   const categoriaNombre = productosDeCategoria.length > 0 ? productosDeCategoria[0].categoria : slugDecoded;
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
-      <main className="max-w-7xl mx-auto px-5 sm:px-8 pt-6 sm:pt-10 pb-28 sm:pb-32">
-        
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs sm:text-sm text-neutral-500 mb-6 font-medium">
-            <Link href="/" className="hover:text-neutral-900 transition-colors flex items-center gap-1.5">
+    <div className="min-h-screen" style={{ background: "var(--theme-bg)", color: "var(--theme-text)", transition: "background-color 0.3s ease, color 0.3s ease" }}>
+      
+      {/* Category Hero */}
+      <section className="relative overflow-hidden border-b border-th-border" style={{ background: "radial-gradient(circle at center, var(--theme-card-hover) 0%, var(--theme-bg) 100%)" }}>
+        <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-10 sm:py-16 text-center animate-fade-in-up">
+            {/* Breadcrumb inside hero */}
+            <nav className="flex items-center justify-center gap-2 text-xs sm:text-sm mb-6 font-medium" style={{ color: "var(--theme-muted)" }}>
+              <Link href="/" className="hover:text-th-text transition-colors flex items-center gap-1.5">
                 <Home size={14} />
                 Inicio
-            </Link>
-            <ChevronRight size={14} className="text-neutral-300" />
-            <span className="text-neutral-900 font-semibold">{categoriaNombre}</span>
-        </nav>
+              </Link>
+              <ChevronRight size={14} style={{ color: "var(--theme-border-strong)" }} />
+              <span className="font-semibold" style={{ color: "var(--theme-text)" }}>{categoriaNombre}</span>
+            </nav>
 
-        <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2 text-neutral-900">{categoriaNombre}</h1>
-            <p className="text-neutral-500 text-sm sm:text-base">{productosDeCategoria.length} resultado{productosDeCategoria.length !== 1 ? 's' : ''}</p>
+            <h1
+              className="text-3xl sm:text-5xl font-bold tracking-tight mb-3"
+              style={{ color: "var(--theme-text)", letterSpacing: "-0.04em" }}
+            >
+              {categoriaNombre}
+            </h1>
+            <p className="text-sm sm:text-base opacity-70" style={{ color: "var(--theme-muted)" }}>
+              {productosDeCategoria.length} {productosDeCategoria.length === 1 ? "artículo" : "artículos"} en esta categoría.
+            </p>
         </div>
+      </section>
 
+      <main className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-8 pb-28 sm:pb-32">
         {productosDeCategoria.length === 0 ? (
-            <div className="text-center py-16 text-neutral-400">
-                <Smartphone size={36} className="mx-auto mb-3 opacity-30" />
+            <div className="text-center py-16" style={{ color: "var(--theme-muted)" }}>
                 <p className="text-sm">No se encontraron productos para esta categoría</p>
             </div>
         ) : (

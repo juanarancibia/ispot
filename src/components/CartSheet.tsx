@@ -36,17 +36,24 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
 
     return (
         <>
-            {/* FAB del carrito */}
+            {/* FAB */}
             <button
                 id="cart-button"
                 onClick={() => setOpen(true)}
-                className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white pl-4 pr-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-lg shadow-blue-600/25 transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm"
+                className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 text-white pl-4 pr-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm cursor-pointer"
+                style={{
+                    background: "var(--theme-accent)",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25)",
+                }}
                 aria-label="Abrir carrito"
             >
                 <ShoppingCart size={18} />
                 <span className="hidden sm:inline">Carrito</span>
                 {itemCount > 0 && (
-                    <span className="bg-white text-blue-700 text-[11px] font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 ml-0.5">
+                    <span
+                        className="text-[11px] font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 ml-0.5"
+                        style={{ background: "white", color: "var(--theme-accent)" }}
+                    >
                         {itemCount}
                     </span>
                 )}
@@ -55,29 +62,45 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
             {/* Overlay */}
             {open && (
                 <div
-                    className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+                    className="fixed inset-0 z-40"
+                    style={{
+                        background: "var(--theme-overlay)",
+                        backdropFilter: "blur(5px)",
+                        WebkitBackdropFilter: "blur(5px)",
+                    }}
                     onClick={() => setOpen(false)}
                 />
             )}
 
-            {/* Sheet */}
+            {/* Sheet sidebar */}
             <div
-                className={`fixed top-0 right-0 z-50 h-full w-full sm:max-w-md bg-white text-neutral-900 border-l border-neutral-200 shadow-2xl flex flex-col transition-transform duration-300 ease-out ${open ? "translate-x-0" : "translate-x-full"
-                    }`}
+                className={`fixed top-0 right-0 z-50 h-full w-full sm:max-w-md flex flex-col transition-transform duration-400 ease-out ${open ? "translate-x-0" : "translate-x-full"}`}
+                style={{
+                    background: "var(--theme-modal)",
+                    borderLeft: "1px solid var(--theme-card-border)",
+                    boxShadow: open ? "-10px 0 30px rgba(0,0,0,0.5)" : "none",
+                    transitionTimingFunction: "cubic-bezier(0.25, 1, 0.5, 1)",
+                }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-neutral-200">
-                    <h2 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
-                        <ShoppingCart size={18} className="text-blue-600" />
-                        Mi Carrito
+                <div
+                    className="flex items-center justify-between px-4 sm:px-5 py-4"
+                    style={{ borderBottom: "1px solid var(--theme-card-border)" }}
+                >
+                    <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--theme-text)" }}>
+                        <ShoppingCart size={18} style={{ color: "var(--theme-accent)" }} />
+                        Tu Pedido
                         {itemCount > 0 && (
-                            <span className="text-xs text-neutral-500 font-normal">({itemCount})</span>
+                            <span className="text-xs font-normal" style={{ color: "var(--theme-muted)" }}>
+                                ({itemCount})
+                            </span>
                         )}
                     </h2>
                     <button
                         id="cart-close-button"
                         onClick={() => setOpen(false)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 transition-colors"
+                        className="w-8 h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer"
+                        style={{ background: "var(--theme-input)", color: "var(--theme-muted)" }}
                         aria-label="Cerrar carrito"
                     >
                         <X size={16} />
@@ -87,11 +110,14 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
                 {/* Items */}
                 <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-3">
                     {items.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-neutral-400 gap-3">
-                            <div className="w-16 h-16 rounded-2xl bg-neutral-50 border border-neutral-100 flex items-center justify-center">
+                        <div className="flex flex-col items-center justify-center h-full gap-3" style={{ color: "var(--theme-muted)" }}>
+                            <div
+                                className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                                style={{ background: "var(--theme-card)", border: "1px solid var(--theme-card-border)" }}
+                            >
                                 <ShoppingCart size={28} className="opacity-30" />
                             </div>
-                            <p className="text-sm">Tu carrito está vacío</p>
+                            <p className="text-sm">Tu bolsa está vacía.</p>
                         </div>
                     ) : (
                         items.map((item) => {
@@ -99,47 +125,58 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
                             return (
                                 <div
                                     key={key}
-                                    className="bg-neutral-50 rounded-xl p-3.5 flex gap-3 border border-neutral-100"
+                                    className="rounded-xl p-3.5 flex gap-3"
+                                    style={{
+                                        background: "var(--theme-card)",
+                                        border: "1px solid var(--theme-card-border)",
+                                    }}
                                 >
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-neutral-900 truncate">
+                                        <p className="text-sm font-semibold truncate" style={{ color: "var(--theme-text)" }}>
                                             {item.producto.marca} {item.producto.modelo}
                                         </p>
                                         {item.varianteSeleccionada && (
-                                            <p className="text-[11px] text-neutral-500 mt-0.5">{item.varianteSeleccionada}</p>
+                                            <p className="text-[11px] mt-0.5" style={{ color: "var(--theme-muted)" }}>
+                                                {item.varianteSeleccionada}
+                                            </p>
                                         )}
                                         <div className="mt-1">
                                             {item.producto.precio_final_ars ? (
-                                                <p className="text-blue-600 font-bold text-sm">
+                                                <p className="font-bold text-sm" style={{ color: "var(--theme-accent)" }}>
                                                     {formatMoney(item.producto.precio_final_ars * item.cantidad, "ARS")}
                                                 </p>
                                             ) : (
-                                                <p className="text-blue-600 font-bold text-sm">
+                                                <p className="font-bold text-sm" style={{ color: "var(--theme-accent)" }}>
                                                     {formatMoney(item.producto.precio_final_usd * item.cantidad, "USD")}
                                                 </p>
                                             )}
                                         </div>
                                     </div>
-                                    {/* Controles cantidad */}
+                                    {/* Quantity controls */}
                                     <div className="flex flex-col items-center justify-between gap-1">
-                                        <div className="flex items-center gap-1.5 bg-white border border-neutral-200 rounded-lg px-1 py-0.5">
+                                        <div
+                                            className="flex items-center gap-1.5 rounded-lg px-1 py-0.5"
+                                            style={{ background: "var(--theme-input)", border: "1px solid var(--theme-card-border)" }}
+                                        >
                                             <button
                                                 onClick={() =>
                                                     updateCantidad(item.producto.id, item.varianteSeleccionada, item.cantidad - 1)
                                                 }
-                                                className="w-7 h-7 rounded-lg flex items-center justify-center text-neutral-500 hover:bg-neutral-100 active:bg-neutral-100 transition-colors"
+                                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                                                style={{ color: "var(--theme-muted)" }}
                                                 aria-label="Restar cantidad"
                                             >
                                                 <Minus size={13} />
                                             </button>
-                                            <span className="text-neutral-900 font-bold text-sm w-4 text-center">
+                                            <span className="font-bold text-sm w-4 text-center" style={{ color: "var(--theme-text)" }}>
                                                 {item.cantidad}
                                             </span>
                                             <button
                                                 onClick={() =>
                                                     updateCantidad(item.producto.id, item.varianteSeleccionada, item.cantidad + 1)
                                                 }
-                                                className="w-7 h-7 rounded-lg flex items-center justify-center text-neutral-500 hover:bg-neutral-100 active:bg-neutral-100 transition-colors"
+                                                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                                                style={{ color: "var(--theme-muted)" }}
                                                 aria-label="Sumar cantidad"
                                             >
                                                 <Plus size={13} />
@@ -147,7 +184,8 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
                                         </div>
                                         <button
                                             onClick={() => removeItem(item.producto.id, item.varianteSeleccionada)}
-                                            className="text-neutral-400 hover:text-red-500 active:text-red-500 transition-colors p-1"
+                                            className="transition-colors p-1 cursor-pointer"
+                                            style={{ color: "#ff3b30", opacity: 0.8 }}
                                             aria-label="Eliminar del carrito"
                                         >
                                             <Trash2 size={14} />
@@ -159,28 +197,47 @@ export default function CartSheet({ whatsappVendedor }: CartSheetProps) {
                     )}
                 </div>
 
-                {/* Footer con total y CTA */}
+                {/* Footer with total and CTA */}
                 {items.length > 0 && (
-                    <div className="border-t border-neutral-200 px-4 sm:px-5 py-4 space-y-3 bg-white">
-                        <div className="flex justify-between items-center">
-                            <span className="text-neutral-500 text-sm">Total</span>
-                            <span className="text-neutral-900 text-xl font-bold">{getTotalTexts().join(" + ")}</span>
+                    <div
+                        className="px-4 sm:px-5 py-4 space-y-3"
+                        style={{
+                            borderTop: "1px solid var(--theme-card-border)",
+                            background: "var(--theme-modal)",
+                        }}
+                    >
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm" style={{ color: "var(--theme-muted)" }}>Total</span>
+                            <span className="text-xl font-bold" style={{ color: "var(--theme-text)" }}>
+                                {getTotalTexts().join(" + ")}
+                            </span>
                         </div>
-                        <button
-                            id="hacer-pedido-button"
-                            onClick={handlePedido}
-                            className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-3.5 rounded-full flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] shadow-md shadow-blue-600/20"
-                        >
-                            <MessageCircle size={18} />
-                            Pedir por WhatsApp
-                            <ChevronRight size={16} className="opacity-60" />
-                        </button>
-                        <button
-                            onClick={clearCart}
-                            className="w-full text-neutral-400 hover:text-red-500 active:text-red-500 text-xs transition-colors py-1"
-                        >
-                            Vaciar carrito
-                        </button>
+                        <p className="text-xs leading-relaxed mb-3" style={{ color: "var(--theme-muted)" }}>
+                            * Los pagos en <strong style={{ color: "var(--theme-text)" }}>Pesos</strong> están sujetos a la cotización Dólar Blue del día de pago.
+                        </p>
+                        <div className="flex flex-col gap-2">
+                            <button
+                                id="hacer-pedido-button"
+                                onClick={handlePedido}
+                                className="w-full py-3.5 rounded-full flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98] font-semibold cursor-pointer"
+                                style={{
+                                    background: "#25D366",
+                                    color: "white",
+                                    boxShadow: "0 4px 12px rgba(37, 211, 102, 0.2)",
+                                }}
+                            >
+                                <MessageCircle size={18} />
+                                WhatsApp
+                                <ChevronRight size={16} className="opacity-60" />
+                            </button>
+                            <button
+                                onClick={clearCart}
+                                className="w-full text-xs transition-colors py-1 cursor-pointer"
+                                style={{ color: "var(--theme-muted)", background: "transparent", border: "none" }}
+                            >
+                                Vaciar carrito
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

@@ -2,7 +2,7 @@ import type { Producto } from "@/types";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { beforeAll, describe, expect, it } from "vitest";
-import { parsearListaPrecios, splitEnSecciones } from "../ai";
+import { normalizarTexto, parsearListaPrecios, splitEnSecciones } from "../ai";
 
 // =============================================
 // Helpers
@@ -219,5 +219,134 @@ describe("parsearListaPrecios — Provider 2", () => {
             p.precio_usd === 1420
         );
         expect(orangeBlue).toBeDefined();
+    });
+});
+
+// =============================================
+// Unit Tests — normalizarTexto
+// =============================================
+
+describe("normalizarTexto", () => {
+    it("normalizes 'u$' to 'USD '", () => {
+        expect(normalizarTexto("u$ 480")).toBe("USD 480");
+        expect(normalizarTexto("u$480")).toBe("USD 480");
+    });
+
+    it("normalizes 'U$S' and 'u$s' to 'USD'", () => {
+        expect(normalizarTexto("U$S 1200")).toBe("USD 1200");
+        expect(normalizarTexto("u$s 1200")).toBe("USD 1200");
+    });
+
+    it("normalizes 'US$' to 'USD'", () => {
+        expect(normalizarTexto("US$ 900")).toBe("USD 900");
+    });
+
+    it("converts dot-as-thousands-separator prices after USD", () => {
+        expect(normalizarTexto("u$ 1.150")).toBe("USD 1150");
+        expect(normalizarTexto("u$ 2.300")).toBe("USD 2300");
+        expect(normalizarTexto("u$s 10.500")).toBe("USD 10500");
+    });
+
+    it("does NOT convert decimals that are not thousands separators", () => {
+        // "480" has no dot, should stay as-is
+        expect(normalizarTexto("u$ 480")).toBe("USD 480");
+        // F/4.5 is a lens spec, not after USD so should stay
+        expect(normalizarTexto("EF S 10-18 F/4.5-5.6 IS STM")).toBe("EF S 10-18 F/4.5-5.6 IS STM");
+    });
+
+    it("handles double dollar sign", () => {
+        expect(normalizarTexto("$$1420")).toBe("$1420");
+    });
+
+    it("processes a full Canon lens line correctly", () => {
+        const input = "* u$ 1.150 - EF 16-35 F/4L IS USM";
+        const expected = "* USD 1150 - EF 16-35 F/4L IS USM";
+        expect(normalizarTexto(input)).toBe(expected);
+    });
+
+    it("processes multiple lines correctly", () => {
+        const input = `🔴 CANON (Monturas RF y EF)
+* u$ 1.150 - EF 16-35 F/4L IS USM
+* u$ 480 - EF 50MM F/1,4 USM
+* u$ 490 - EF S 10-18 F/4.5-5.6 IS STM`;
+
+        const result = normalizarTexto(input);
+        expect(result).toContain("USD 1150");
+        expect(result).toContain("USD 480");
+        expect(result).toContain("USD 490");
+        // Lens specs should NOT be modified
+        expect(result).toContain("F/4L");
+        expect(result).toContain("F/1,4");
+        expect(result).toContain("F/4.5-5.6");
+    });
+});
+
+// =============================================
+// Integration Tests — parsearListaPrecios (Canon Lenses)
+// =============================================
+
+describe("parsearListaPrecios — Canon Lenses (Provider 3 format)", () => {
+    let productos: Producto[];
+
+    const CANON_INPUT = `/prov3
+🔴 CANON (Monturas RF y EF)
+* u$ 1.150 - EF 16-35 F/4L IS USM
+* u$ 480 - EF 50MM F/1,4 USM
+* u$ 490 - EF S 10-18 F/4.5-5.6 IS STM
+* u$ 2.300 - RF 24-70mm F/2.8L IS USM
+* u$ 750 - RF 50mm F/1.2L USM`;
+
+    beforeAll(async () => {
+        productos = await parsearListaPrecios(CANON_INPUT, "prov_3");
+        console.log(`[Test Setup] Canon Lenses: ${productos.length} products extracted`);
+        console.log(JSON.stringify(productos, null, 2));
+    }, 120_000);
+
+    it("extracts the correct number of products", () => {
+        expect(productos.length).toBeGreaterThanOrEqual(3);
+        expect(productos.length).toBeLessThanOrEqual(6);
+    });
+
+    it("correctly extracts prices from 'u$ X.XXX' format", () => {
+        const findByModel = (partial: string) =>
+            productos.find((p) =>
+                p.modelo.toLowerCase().includes(partial.toLowerCase())
+            );
+
+        // u$ 1.150 → 1150 USD
+        const ef1635 = findByModel("16-35");
+        expect(ef1635).toBeDefined();
+        expect(ef1635!.precio_usd).toBe(1150);
+
+        // u$ 480 → 480 USD
+        const ef50 = findByModel("50mm") || findByModel("50MM");
+        expect(ef50).toBeDefined();
+        expect(ef50!.precio_usd).toBe(480);
+
+        // u$ 490 → 490 USD
+        const efs1018 = findByModel("10-18");
+        expect(efs1018).toBeDefined();
+        expect(efs1018!.precio_usd).toBe(490);
+    });
+
+    it("assigns Canon as brand", () => {
+        for (const p of productos) {
+            expect(p.marca.toLowerCase()).toBe("canon");
+        }
+    });
+
+    it("all products are marked as Nuevo", () => {
+        for (const p of productos) {
+            expect(p.condicion).toBe("Nuevo");
+        }
+    });
+
+    it("assigns correct category for lenses", () => {
+        for (const p of productos) {
+            const cat = p.categoria.toLowerCase();
+            expect(
+                cat.includes("lente") || cat.includes("fotografía") || cat.includes("fotografia")
+            ).toBe(true);
+        }
     });
 });

@@ -1,11 +1,161 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --color-background: #fafafa;
-  --color-foreground: #171717;
+/* ===================================================================
+   THEME SYSTEM — Light & Dark
+   Use data-theme="dark" on <html> to activate dark mode
+   =================================================================== */
+
+:root {
+  /* Page backgrounds */
+  --theme-bg: #fafafa;
+  --theme-surface: #ffffff;
+  --theme-surface-alt: #f5f5f5;
+
+  /* Card system */
+  --theme-card: #ffffff;
+  --theme-card-hover: rgba(0, 0, 0, 0.02);
+  --theme-card-border: rgba(0, 0, 0, 0.06);
+
+  /* Typography */
+  --theme-text: #171717;
+  --theme-muted: #737373;
+
+  /* Borders */
+  --theme-border: rgba(0, 0, 0, 0.08);
+  --theme-border-strong: rgba(0, 0, 0, 0.12);
+
+  /* Accent */
+  --theme-accent: #2563eb;
+  --theme-accent-hover: #1d4ed8;
+  --theme-accent-light: rgba(37, 99, 235, 0.1);
+
+  /* Overlay */
+  --theme-overlay: rgba(0, 0, 0, 0.4);
+
+  /* Header */
+  --theme-header: rgba(255, 255, 255, 0.75);
+
+  /* Inputs */
+  --theme-input: rgba(0, 0, 0, 0.04);
+  --theme-input-border: rgba(0, 0, 0, 0.1);
+  --theme-input-focus: rgba(37, 99, 235, 0.2);
+
+  /* Sidebar/Modal */
+  --theme-modal: #ffffff;
+
+  /* Misc */
+  --theme-shadow: rgba(0, 0, 0, 0.08);
+  --theme-shadow-hover: rgba(0, 0, 0, 0.15);
+
+  /* Condition badges */
+  --theme-badge-new: rgba(37, 99, 235, 0.08);
+  --theme-badge-new-text: #2563eb;
+  --theme-badge-used: rgba(245, 158, 11, 0.1);
+  --theme-badge-used-text: #d97706;
+  --theme-badge-danger: rgba(239, 68, 68, 0.1);
+  --theme-badge-danger-text: #dc2626;
+
+  /* Transition */
+  --transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  --card-radius: 20px;
 }
 
+[data-theme="dark"] {
+  /* Page backgrounds */
+  --theme-bg: #000000;
+  --theme-surface: #111111;
+  --theme-surface-alt: #0a0a0a;
+
+  /* Card system */
+  --theme-card: rgba(255, 255, 255, 0.03);
+  --theme-card-hover: rgba(255, 255, 255, 0.08);
+  --theme-card-border: rgba(255, 255, 255, 0.05);
+
+  /* Typography */
+  --theme-text: #f5f5f7;
+  --theme-muted: #86868b;
+
+  /* Borders */
+  --theme-border: rgba(255, 255, 255, 0.05);
+  --theme-border-strong: rgba(255, 255, 255, 0.12);
+
+  /* Accent */
+  --theme-accent: #2997ff;
+  --theme-accent-hover: #0071e3;
+  --theme-accent-light: rgba(41, 151, 255, 0.15);
+
+  /* Overlay */
+  --theme-overlay: rgba(0, 0, 0, 0.8);
+
+  /* Header */
+  --theme-header: rgba(0, 0, 0, 0.8);
+
+  /* Inputs */
+  --theme-input: rgba(255, 255, 255, 0.1);
+  --theme-input-border: rgba(255, 255, 255, 0.08);
+  --theme-input-focus: rgba(41, 151, 255, 0.2);
+
+  /* Sidebar/Modal */
+  --theme-modal: #111111;
+
+  /* Misc */
+  --theme-shadow: rgba(0, 0, 0, 0.3);
+  --theme-shadow-hover: rgba(0, 0, 0, 0.5);
+
+  /* Condition badges */
+  --theme-badge-new: rgba(41, 151, 255, 0.12);
+  --theme-badge-new-text: #2997ff;
+  --theme-badge-used: rgba(255, 149, 0, 0.12);
+  --theme-badge-used-text: #ff9500;
+  --theme-badge-danger: rgba(255, 69, 58, 0.12);
+  --theme-badge-danger-text: #ff453a;
+
+  /* Scrollbar overrides */
+  color-scheme: dark;
+}
+
+
+/* ===================================================================
+   TAILWIND v4 — Theme tokens (reactive to CSS vars)
+   =================================================================== */
+
+@theme inline {
+  --font-sans: 'Inter', var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --color-th-bg: var(--theme-bg);
+  --color-th-surface: var(--theme-surface);
+  --color-th-surface-alt: var(--theme-surface-alt);
+  --color-th-card: var(--theme-card);
+  --color-th-card-hover: var(--theme-card-hover);
+  --color-th-card-border: var(--theme-card-border);
+  --color-th-text: var(--theme-text);
+  --color-th-muted: var(--theme-muted);
+  --color-th-border: var(--theme-border);
+  --color-th-border-strong: var(--theme-border-strong);
+  --color-th-accent: var(--theme-accent);
+  --color-th-accent-hover: var(--theme-accent-hover);
+  --color-th-accent-light: var(--theme-accent-light);
+  --color-th-overlay: var(--theme-overlay);
+  --color-th-header: var(--theme-header);
+  --color-th-input: var(--theme-input);
+  --color-th-input-border: var(--theme-input-border);
+  --color-th-input-focus: var(--theme-input-focus);
+  --color-th-modal: var(--theme-modal);
+  --color-th-shadow: var(--theme-shadow);
+  --color-th-shadow-hover: var(--theme-shadow-hover);
+  --color-th-badge-new: var(--theme-badge-new);
+  --color-th-badge-new-text: var(--theme-badge-new-text);
+  --color-th-badge-used: var(--theme-badge-used);
+  --color-th-badge-used-text: var(--theme-badge-used-text);
+  --color-th-badge-danger: var(--theme-badge-danger);
+  --color-th-badge-danger-text: var(--theme-badge-danger-text);
+}
+
+
+/* ===================================================================
+   BASE STYLES
+   =================================================================== */
 
 html {
   scroll-behavior: smooth;
@@ -13,15 +163,17 @@ html {
 }
 
 body {
-  background: #fafafa;
-  color: #171717;
+  background: var(--theme-bg);
+  color: var(--theme-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior-y: none;
+  line-height: 1.5;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Scrollbar personalizado */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -29,14 +181,15 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d4d4d4;
+  background: var(--theme-muted);
   border-radius: 999px;
+  opacity: 0.4;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a3a3a3;
+  opacity: 0.7;
 }
 
-/* Ocultar scrollbar horizontal (filtros mobile) */
+/* Hide horizontal scrollbar for pill filters */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -45,21 +198,63 @@ body {
   scrollbar-width: none;
 }
 
-/* Selección de texto */
+/* Text selection */
 ::selection {
-  background: rgba(37, 99, 235, 0.15);
-  color: #1e3a8a;
+  background: var(--theme-accent-light);
+  color: var(--theme-text);
 }
 
-/* Focus visible para accesibilidad */
+/* Focus visible */
 :focus-visible {
-  outline: 2px solid rgba(37, 99, 235, 0.5);
+  outline: 2px solid var(--theme-accent);
   outline-offset: 2px;
 }
 
-/* Safe area para dispositivos con notch */
+/* Safe area for notch devices */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   body {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* ===================================================================
+   ANIMATIONS
+   =================================================================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+/* Staggered card animations */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }

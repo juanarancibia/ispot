@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -10,13 +11,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "iSpot",
+  title: "ISPOT IMPORT — Equipamiento Premium",
   description:
-    "Catálogo actualizado diariamente con los mejores precios en smartphones, audio y accesorios. Stock garantizado, comprá por WhatsApp.",
-  keywords: ["ispot", "tecnología", "smartphones", "importados", "precios"],
+    "Importación de equipos premium. Cámaras, lentes, MacBooks, iPhones y drones al mejor precio. Stock garantizado, comprá por WhatsApp.",
+  keywords: ["ispot", "tecnología", "cámaras", "macbooks", "iphone", "importados", "precios", "córdoba"],
   openGraph: {
-    title: "iSpot",
-    description: "Catálogo actualizado diariamente con stock real.",
+    title: "ISPOT IMPORT",
+    description: "Equipamiento original de fábrica. Catálogo actualizado diariamente.",
     type: "website",
   },
   icons: {
@@ -26,10 +27,31 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={inter.variable}>
-      <body className="font-sans antialiased bg-neutral-50">
+    <html lang="es" className={inter.variable} suppressHydrationWarning>
+      <head>
+        {/* Prevent flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('ispot-theme');
+                  if (!theme) {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  }
+                  document.documentElement.setAttribute('data-theme', theme);
+                } catch(e) {
+                  document.documentElement.setAttribute('data-theme', 'dark');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="font-sans antialiased">
         <Header />
         {children}
+        <Footer />
       </body>
     </html>
   );
